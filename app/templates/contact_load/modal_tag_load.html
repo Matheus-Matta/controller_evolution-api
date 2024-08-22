@@ -1,0 +1,17 @@
+<div class="modal-body">
+    {% include 'contact_load/partials/search_tag.html' %}
+    {% include 'contact_load/partials/create_tag.html' %}
+    <form id="addTagform">
+        {% csrf_token %}
+        <div class="form-group list-tag">
+            <label>Tags<i class="bi bi-tags ml-2"></i></label>
+            <ul class="list-group">
+                {% for tag in tags %}
+                {% include 'contact_load/partials/modal_tag_item.html' %}
+                {% endfor %}
+            </ul>
+        </div>
+        <input type="hidden" name="selected-contacts" id="selected-contacts">
+        <button type="submit" class="btn btn-primary">Adicionar Tags</button>
+    </form>
+</div>

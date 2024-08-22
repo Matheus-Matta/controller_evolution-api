@@ -1,0 +1,9 @@
+{% load static %}
+<div class="createTag">
+    {% csrf_token %}
+    <div class="input-group mb-2">
+        <input style="font-size: 1vw;" name="name_tag" type="text" class="form-control p-4 pl-1" id="new-tag" placeholder="Digite o nome da nova tag">
+        <button class="btn btn-primary rounded-0 btn_create_tag" type="submit" id="button-addon">criar tag</button>
+    </div>
+</div>
+<script type="module" src="{% static 'js/contact/create_tag.js' %}"></script>

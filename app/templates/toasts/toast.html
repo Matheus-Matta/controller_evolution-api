@@ -1,0 +1,13 @@
+<div class="toast-container position-fixed" style="z-index: 1060 !important; top: 10px; right: 10px;">
+  {% if messages %}
+  {% for message in messages %}
+    <div class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true" style='background-color: var(--{{ message.tags }});'>
+        <div class="d-flex">
+          <div class="toast-body text-light" style="font-size: 1.1rem;">
+            {{ message }}
+          </div>
+        </div>
+      </div>
+  {% endfor %}
+  {% endif %}
+</div>

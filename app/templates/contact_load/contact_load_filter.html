@@ -1,0 +1,20 @@
+<tbody>
+    {% for contact in contacts %}
+        <tr data-contact-id="{{ contact.id }}">
+                <td data-counter="{{ forloop.counter }}">{{ forloop.counter }}</td>
+                <td class="contact-name">{{ contact.name }}</td>
+                <td class="contact-number" style="font-weight: 500; letter-spacing: 1px;">+{{ contact.number }}</td>
+                <td style="white-space: nowrap;" class="text-secondary d-flex align-items-center justify-content-center">
+                    <div class="conteiner-tags text-secondary">
+                        <span class="badge badge-secondary rounded-pill p-2"><p class="m-0">{{ tag_name }}</p></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="edit-contact">
+                        <i class="bi bi-pencil-square text-white edit-button"></i>
+                        <i class="bi bi-check-circle-fill text-white confirm-edit d-none"></i>
+                    </div>
+                </td>
+        </tr>
+    {% endfor %}
+</tbody>

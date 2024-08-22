@@ -1,0 +1,42 @@
+<tr data-contact-id="{{ contact.id }}">
+    {% if contact_len %}
+    <td data-counter="{{ contact_len }}">
+        {{ contact_len }}
+    </td>
+    {% else %}
+    <td data-counter="{{ forloop.counter }}">
+        {{ forloop.counter }}
+    </td>
+    {% endif %}
+    <td class="contact-name">{{ contact.name }}</td>
+    <td class="contact-number" style="font-weight: 500; letter-spacing: 1px;">+{{ contact.number }}</td>
+    <td style="white-space: nowrap;" class="text-secondary d-flex align-items-center justify-content-between">
+        {% if contact.tags.all|length > 1 %}
+        <i class="bi bi-caret-left-fill arrow-left" style="cursor:pointer;"></i>
+        {% else %}
+        <i class="bi bi-caret-right-fill" style="cursor: pointer; opacity: 0;"></i>
+        {% endif %}
+        {% for tag in contact.tags.all %}
+        {% if forloop.counter == 1 %}
+            <div class="conteiner-tags text-secondary">
+                <span class="badge badge-secondary rounded-pill p-2"><p class="m-0">{{ tag.name }}</p></span>
+            </div>
+            {% else %}
+            <div class="conteiner-tags text-secondary d-none">
+                 <span class="badge badge-secondary rounded-pill p-2"><p class="m-0">{{ tag.name }}</p></span>
+            </div>
+            {% endif %}
+        {% endfor %}
+        {% if contact.tags.all|length > 1 %}
+        <i class="bi bi-caret-right-fill arrow-right" style="cursor:pointer;"></i>
+        {% else %}
+        <i class="bi bi-caret-right-fill" style="cursor: pointer; opacity: 0;"></i>
+        {% endif %}
+    </td>
+    <td>
+        <div class="edit-contact">
+            <i class="bi bi-pencil-square text-white edit-button"></i>
+            <i class="bi bi-check-circle-fill text-white confirm-edit d-none"></i>
+        </div>
+    </td>
+</tr>

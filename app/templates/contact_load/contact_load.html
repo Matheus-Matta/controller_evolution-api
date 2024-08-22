@@ -1,0 +1,11 @@
+<tbody>
+{% for contact in contacts %}
+    {% include 'contact_load/partials/contact_item.html' %}
+{% endfor %}
+</tbody>
+<script>
+    function confirmDeleteTag() {
+     const response = confirm('Você tem certeza que deseja excluir está tag?');
+     return response;
+    }
+ </script>

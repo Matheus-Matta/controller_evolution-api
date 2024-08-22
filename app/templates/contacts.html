@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Contacts</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/contacts.css' %}">
+</head>
+<body>
+    {% include 'header.html' %}
+    <div class="container-fluid">
+        <div class="row">
+            {% include 'sidebar.html' %} 
+            <div style="margin-top: 2vh;" class="col-md-2 p-0 pl-2">
+                <div class="m-0 p-0 d-flex align-items-center justify-content-between">
+                    <h6 class="m-0">Filtros<i class="bi bi-funnel ml-2"></i></h6>
+                    {% if filter %}
+                    <a href="{% url 'contact' %}" class="mr-2">
+                        <span style="background-color: rgba(255, 0, 0, 0.20);"  class="clean-filter-tag text-danger badge">
+                            <i class="bi bi-x-lg"></i>
+                            Filtros
+                        </span>
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="search-bar-container mt-2 display-h">
+                    <label for="search-bar" class="position-relative">
+                        <i  style="top: 5px; bottom: 0; left: 10px;" class="bi bi-search position-absolute"></i>
+                        <input style="width: 16vw; padding-left: 30px !important;" type="text" id="search-bar" class="form-control p-3" placeholder="Pesquisar contato">
+                    </label>
+                    <button style="font-size: 0.9vw; text-wrap: nowrap; padding: 0.3vw !important;" class="btn btn-success btn-tags btn-add-tag col-md-6 p-0" disabled><i class="bi bi-tag mr-2"></i>Adicionar tag</button>
+                    <button style="font-size: 0.9vw; text-wrap: nowrap; padding: 0.3vw !important;" class="btn btn-danger btn-tags btn-del-tag col-md-4 p-0" disabled><i class="bi bi-trash mr-2"></i>Excluir</button>
+                    <h6 class="d-block  mt-3">lista de contatos<i class="bi bi-list-nested ml-2"></i></h6>
+                    <div class="d-flex conteiner-imp-exp justify-content-around pl-2 pr-2">
+                        <div class="btn-import col-md-5 text-center" data-toggle="modal" data-target="#importModal">
+                            <i class="bi bi-arrow-bar-down mr-1"></i>
+                            importar
+                        </div>
+                        <div class="btn-export col-md-5 text-center">
+                            <i class="bi bi-arrow-bar-up mr-1"></i>
+                            exportar
+                        </div>
+                    </div>
+                    <h6 class="d-block mt-3">tags<i class="bi bi-tags ml-2"></i></h6>
+                    {% include 'contact_load/tag_load.html' %}
+                    
+                </div>
+            </div>
+            <div class="col-md-8 content pl-2 display-h">
+                <div style="display: flex;" class="flex-row align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div style="display: flex;" class="flex-row align-items-center">
+                            <h2>Contatos</h2>
+                            <span style="font-size: 0.8vw;" id="contact_qtd" class="badge badge-primary ml-2">
+                                <i class="bi bi-arrow-up-short"></i>
+                                <p class="d-inline">{{ total_contacts }}</p>
+                            </span>
+                        </div>
+                        <span style="font-size: 0.8vw;" class="badge badge-success d-none qtd-ckeck ml-2">0</span>
+                    </div>
+                    <div class="d-flex align-items-center ">
+                        <button style="font-weight: 600;" class="btn btn-outline-success mr-4" data-toggle="modal" data-target="#addContactModal">
+                            <i class="bi bi-plus-square"></i>
+                            Contato
+                        </button>
+                        {% include 'contact_load/partials/nav_pagination.html' %} 
+                    </div>
+                </div>
+                <div class="contact-table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="col-md-1 pl-2">
+                                    <span class="ckeck-all-off">#</span>
+                                    <span class="ckeck-all-on d-none">
+                                        <label style="cursor: pointer;" for="check-all" class="d-flex align-items-center m-0">
+                                            <input type="checkbox" id="check-all">
+                                            <span class="text-secondary ml-1">todos</span>
+                                        </label>
+                                    </span>
+                                </th>
+                                <th class="pl-2 contact-name col-md-5">Nome<i class="bi bi-people ml-2"></i></th>
+                                <th class="pl-2 contact-number col-md-3">Numero<i class="bi bi-telephone-inbound ml-2"></i></th>
+                                <th class="pl-2 col-md-3" style="text-align: center;">Tags<i class="bi bi-tags ml-2"></i></th>
+                                <th class="pl-2"></th>
+                            </tr>
+                        </thead>
+                            {% if filter %}
+                                {% include 'contact_load/contact_load_filter.html' %}
+                            {% else %}
+                                {% include 'contact_load/contact_load.html' %}
+                            {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Tag -->
+    {% include 'modal/modal_addTag.html' %}
+    
+
+    <!-- modal nova instancia Container -->
+    {% if form_instancia %}
+    {% include 'modal/modal_newInstancia.html' %}
+    {% endif %}
+
+    <!-- modal qrcode Container -->
+    {% if qrcode_image %}
+    {% include 'modal/modal_sucessNewInstancia.html' %}
+    {% endif %}
+    {% include 'script/qrcodeConnect.html' %}
+
+    <!-- Toast Container -->
+    {% include 'toasts/toast.html' %}
+
+    <!-- modal new contact -->
+    {% include 'modal/modal_newContact.html' %}
+
+    <!-- modal importar contato -->
+    {% include 'modal/importModal.html' %}
+    
+        
+</div>
+    
+
+    <script>
+        '{% if form_instancia %}'
+        $(document).ready(function() {
+            $('#newInstanceModal').modal('show');
+        });
+        '{% endif %}'
+        
+        '{% if qrcode_image %}'
+        $(document).ready(function() {
+            $('#successModal').modal('show');
+        });
+        '{% endif %}'
+
+        '{% if messages %}'
+            document.addEventListener('DOMContentLoaded', function () {
+                var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+                var toastList = toastElList.map(function (toastEl) {
+                    return new bootstrap.Toast(toastEl, { delay: 5000 });
+                });
+                toastList.forEach(toast => toast.show());
+            });
+        '{% endif %}'
+
+        const forms = document.querySelectorAll(".form_state")
+        forms.forEach((form)=>{
+            form.addEventListener("submit",()=>{
+                document.querySelector('body').insertAdjacentHTML('beforeend', `
+                <div class="conteiner-spinner">
+                        <div class="spinner-border mr-2 text-secondary" role="status">
+                            <span class="visually-hidden"></span>
+                        </div>
+                 </div>
+                `);
+            })
+        })
+       
+    </script>
+
+    <script type="module" src="{% static 'js/contacts.js' %}"></script>
+    <script type="module" src="{% static 'js/contact/edit_contact.js' %}"></script>
+    <script type="module" src="{% static 'js/contact/select_contact.js' %}"></script>
+    <script type="module" src="{% static 'js/contact/nav_tag_contact.js' %}"></script>
+    <script type="module" src="{% static 'js/contact/edit_contact.js' %}"></script>
+    <script type="module" src="{% static 'js/contact/select_contact.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

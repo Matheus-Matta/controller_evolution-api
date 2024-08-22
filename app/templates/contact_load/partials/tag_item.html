@@ -1,0 +1,16 @@
+<div class="col-md-12 mt-2 p-0">
+    <a href="{% url 'filter_contacts_by_tag' tag.name %}" style="text-decoration: none;">
+        <button type="button" style="font-size: 0.6vw;" class="btn btn-outline-secondary p-2 col-md-10 m-0">
+            {{ tag.name }}
+        </button>
+    </a>
+    <div style="padding: 0 !important;" class="btn col-md-1">
+        <form action="{% url 'delete_tag' %}" method="POST"  onsubmit="return confirmDeleteTag();">
+            {% csrf_token %}
+            <input type="hidden" value="{{ tag.id }}" name="tag_id">
+            <button type="submit" class="text-danger btn p-0">
+                <i class="bi bi-trash"></i>
+            </button>
+        </form>
+    </div>    
+</div>

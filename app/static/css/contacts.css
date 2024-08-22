@@ -1,0 +1,126 @@
+.contact-table-container {
+    height: 85vh; /* Limita a altura do contêiner a 80% da altura da tela */
+    overflow-y: auto; /* Adiciona scroll vertical */
+    margin-top: 20px;
+}
+.contact-table-container::-webkit-scrollbar {
+    width: 8px; /* Largura da barra de rolagem */
+}
+
+.contact-table-container::-webkit-scrollbar-track {
+    background: transparent; /* Fundo da barra de rolagem */
+}
+
+.contact-table-container::-webkit-scrollbar-thumb {
+    background-color: #007bff; /* Cor da barra de rolagem */
+    border-radius: 20px; /* Bordas arredondadas */
+    border: 2px solid transparent; /* Espaço ao redor da barra de rolagem */
+}
+
+.contact-table-container::-webkit-scrollbar-thumb:hover {
+    background-color: #0056b3; /* Cor da barra de rolagem ao passar o mouse */
+}
+.badge p{
+    margin-top: -2px !important;
+}
+.conteiner-tags{
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+}
+.conteiner-tags i:hover{
+   color: var(--primary);
+   cursor: pointer;
+}
+table{
+    width: 100%;
+}
+table td {
+    padding: 8px !important;
+}
+
+table tr:hover {
+    background-color: #0084ff25 !important;
+    cursor: pointer;
+}
+.edit-contact{
+    width: 25px;
+    height: 25px;
+    background-color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+}
+.form-control{
+    height: 30px !important;
+}
+#conteiner-tags{
+    height: 65vh;
+    overflow-y: auto;
+}
+#conteiner-tags ul li:hover{
+    transform: scale(1.1);
+    cursor: pointer;
+
+}
+#conteiner-tags::-webkit-scrollbar {
+    width: 8px; /* Largura da barra de rolagem */
+}
+
+#conteiner-tags::-webkit-scrollbar-track {
+    background: transparent; /* Fundo da barra de rolagem */
+}
+
+#conteiner-tags::-webkit-scrollbar-thumb {
+    background-color: var(--gray);/* Cor da barra de rolagem */
+    border-radius: 20px; /* Bordas arredondadas */
+    border: 2px solid transparent; /* Espaço ao redor da barra de rolagem */
+}
+#conteiner-tags::-webkit-scrollbar-thumb:hover {
+    background-color: var(--gray); /* Cor da barra de rolagem ao passar o mouse */
+}
+.conteiner-imp-exp div{
+    border: 1px solid var(--primary) !important;
+    font-size: 0.8vw;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    color: var(--primary);
+}
+.conteiner-imp-exp div:hover{
+    transform: scale(1.1);
+    cursor: pointer;
+}
+.tag-groups li{
+    color: var(--gray);
+    padding: 8px;
+}
+.tag-groups li:hover{
+ color: var(--primary) !important;
+ border: 1px solid var(--primary) !important;
+}
+.list-tag{
+    min-height: auto;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.list-tag::-webkit-scrollbar {
+    width: 6px; /* Largura da barra de rolagem */
+}
+.list-tag::-webkit-scrollbar-track {
+    background: transparent; /* Fundo da barra de rolagem */
+}
+.list-tag::-webkit-scrollbar-thumb {
+    background-color: var(--gray);/* Cor da barra de rolagem */
+    border-radius: 20px; /* Bordas arredondadas */
+    border: 1px solid transparent; /* Espaço ao redor da barra de rolagem */
+}
+.list-tag::-webkit-scrollbar-thumb:hover {
+    background-color: var(--gray); /* Cor da barra de rolagem ao passar o mouse */
+}
+table td .arrow-left:hover,table td .arrow-right:hover{
+    color: var(--primary) !important;
+    transform: scale(1.1);
+}

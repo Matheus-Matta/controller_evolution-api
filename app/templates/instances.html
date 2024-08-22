@@ -1,0 +1,100 @@
+<div>
+    <h4 class="saud display-3">Bem vindo, {{ user.username }}!</h4>
+    <!-- Conteúdo principal da página -->
+    <div class="row">
+        {% for instance in instances %}
+        <a style="text-decoration: none; color: #212121;" href="{% url 'instance_detail' instance.id %}">
+        <div class="col-md-3 p-2">
+            <div class="card">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="profile-pic profile_{{instance.id}}"><i class="bi bi-file-x"></i></div>
+                        <div>
+                            <p class="card-text mb-0 status_{{instance.id}}">
+                               
+                            </p>
+                            <h6 class="card-title mb-0 card-title-truncate">{{ instance.public_name }}</h6>
+                        </div>
+                    
+                    </div>
+                    <div class="content-delete-icon mr-2">
+                        <form method="post" action="{% url 'delete_instance' %}" style="display: inline;" onsubmit="return confirmDelete();">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ instance.id }}">
+                            <button class="btn-delete" type="submit" style="background-color: transparent; border: none;">
+                                <i class="bi bi-trash delete-icon"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </a>
+        <script>
+            fetch('https://api.star.dev.br/instance/connectionState/{{instance.name}}',{
+                method: 'GET',
+                headers: {
+                    'apikey': "{{ instance.token }}",
+                }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                } )
+                .then(data => {
+                    let content;
+                    if(data.instance.state === "close" || data.instance.state === "connecting"){
+                        content = `<span class="badge badge-danger"> Offline </span>`
+                    } else if (data.instance.state === "open"){
+                        content = `<span class="badge badge-success"> Online </span>`
+                        fetch('https://api.star.dev.br/chat/fetchProfile/{{instance.name}}',{
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json', // Adiciona o tipo de conteúdo
+                                'apikey': "{{ instance.token }}"    // Adiciona o cabeçalho com a chave da API
+                            },
+                            body: JSON.stringify({              // Converte o corpo para uma string JSON
+                                number: '{{ instance.number }}'
+                            })
+                        }).then(response =>{
+                            return response.json();
+                        }).then(data =>{
+                             let profile = document.querySelector(".profile_{{instance.id}}")
+                             if(data.picture){
+                                profile.style.backgroundImage = `url(${data.picture})`;
+                                profile.innerHTML = ''
+                            }
+                        }).catch(error => {
+                            console.error('Error', error);
+                        });
+                    } else {
+                        content = `<span class="badge badge-warning"> Error </span>`
+                    }
+                    let status = document.querySelector(".status_{{instance.id}}")
+                    status.innerHTML = content
+                })
+                .catch(error => {
+                    console.error('Error', error);
+                    let status = document.querySelector(".status_{{instance.id}}")
+                    status.innerHTML = `<span class="badge badge-warning"> Error </span>`
+                });
+        </script>
+        {% endfor %}
+    </div>
+</div>
+<script>
+   function confirmDelete() {
+    const response = confirm('Você tem certeza que deseja excluir esta instância?');
+    if (response) {
+        const b = document.querySelector('body');
+        const html = ` <div class="conteiner-spinner">
+                            <div class="spinner-border mr-2 text-secondary" role="status">
+                                <span class="visually-hidden"></span>
+                            </div>
+                        </div>`;
+        b.insertAdjacentHTML('beforeend', html);
+    }
+    return response;
+}
+</script>

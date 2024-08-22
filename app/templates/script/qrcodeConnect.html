@@ -1,0 +1,30 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userId = '{{ user.id }}';
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/webhook/' + userId + '/');
+        let interval_id;
+        socket.onopen = function(event) {
+            console.log('Conectado ao WebSocket');
+            };
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log('Recebido:', data);
+            if (data.event === 'qrcode.updated') {
+                    const imagem = document.getElementById('qrcode');
+                    imagem.src = data.data.qrcode.base64;
+            }
+            if(data.event === 'connection.update' && data.data.state === 'open'){
+                window.location.href = window.location.origin;
+            }
+            };
+
+        socket.onclose = function(event) {
+            console.log('Desconectado do WebSocket');
+            };
+
+        socket.onerror = function(error) {
+            console.error('Erro no WebSocket', error);
+            };
+    });
+</script>

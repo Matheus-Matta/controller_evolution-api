@@ -1,0 +1,14 @@
+{% load static %}
+<div class="d-block" id="conteiner-tags">
+    <ul class="p-0 pl-4">
+        {% for tag in tags %}
+        {% include 'contact_load/partials/tag_item.html' %}
+        {% endfor %}
+    </ul>
+</div>
+<script type="module">
+    function confirmDeleteTag() {
+        return confirm('Você tem certeza que deseja excluir está instância?');
+    }
+</script>
+

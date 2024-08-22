@@ -1,0 +1,46 @@
+{% load static %}
+<div style="padding: 15px;" class="col-md-2 sidebar">
+    <!-- Conteúdo do sidebar -->
+        <ul class="nav flex-column ">
+            <li class="nav-item" style="margin: 0 auto; width: 80%;">
+                <a href="/?new_instancia=true">
+                    <button class="btn btn-primary" style="font-size: 1vw; width: 100%; text-wrap: nowrap;">Criar Instância</button>
+                </a>
+            </li>
+        </ul>
+    <div style="display: flex;" class="flex-column justify-content-between">
+        <div class='side-tools mt-4'>
+            <ul class="nav flex-column side-itens">
+                <p style="font-weight: 500; font-size: 0.8vw;" class="mb-0 text-secondary">ferramentas</p>
+                <li class="nav-item pr-2 mt-2">
+                    <a style="font-size: 1vw;" class="nav-link {% if request.path == '/admin' %}active{% endif %}" href="/admin"><i class="bi bi-code mr-2"></i>Admin</a>
+                </li>
+                <li class="nav-item pr-2 mt-2">
+                    <a style="font-size: 1vw;"  class="nav-link" href="/contacts"><i class="bi bi-person-square mr-2"></i>Contatos</a>
+                </li>
+                <li class="nav-item pr-2 mt-2">
+                    <a style="font-size: 1vw;"  class="nav-link " href="/campanha"><i class="bi bi-graph-up-arrow mr-2"></i>Campanha</a>
+                </li>
+            </ul>
+        </div>
+        <div class="side-apps">
+            <ul class="nav flex-column">
+                <p style="font-weight: 500; font-size: 0.8vw;" class="mb-0 text-secondary">apps</p>
+                <li class="nav-item pr-2 mt-1">
+                    <a style="color: var(--primary); font-size: 1.2vw;" class="nav-link p-1" href="https://chat.star.dev.br"><i class="bi bi-chat-fill mr-2"></i>chatwoot</a>
+                </li>
+                <li class="nav-item pr-2 mt-1">
+                    <a style="color: var(--primary); font-size: 1.2vw;" class="nav-link p-1" href="https://type.star.dev.br"><i class="bi bi-chat-square-fill mr-2"></i>typebot</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script>
+    const path = window.location.pathname;
+    const a = document.querySelector(`.nav-link[href='${path}']`)
+    if(a){
+        a.style.color = 'white'
+        a.style.backgroundColor = 'var(--cleanPrimary)'; 
+    }
+</script>

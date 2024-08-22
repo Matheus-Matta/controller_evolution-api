@@ -1,0 +1,48 @@
+<div class="modal fade" id="newInstanceModal" tabindex="-1" aria-labelledby="newInstanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newInstanceModalLabel">Nova Instância</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'create_instancia' %}" id="formNewInstance">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="{{ form_instancia.name.id_for_label }}">Nome da Instância</label>
+                        {{ form_instancia.name.errors }}
+                        <input type="text" class="form-control" id="{{ form_instancia.name.id_for_label }}" placeholder="Digite o nome da instância" name="{{ form_instancia.name.name }}" value="{{ form_instancia.name.value|default:"" }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form_instancia.integration_type.id_for_label }}">Tipo de Integração</label>
+                        {{ form_instancia.integration_type.errors }}
+                        <select class="form-control" id="{{ form_instancia.integration_type.id_for_label }}" name="{{ form_instancia.integration_type.name }}">
+                            <option value="BAILEYS" {% if form_instancia.integration_type.value == 'BAILEYS' %}selected{% endif %}>Baileys</option>
+                            <option value="BUSINESS" {% if form_instancia.integration_type.value == 'BUSINESS' %}selected{% endif %}>Cloud API</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form_instancia.integration_token.id_for_label }}">Token de Integração (Opcional)</label>
+                        {{ form_instancia.integration_token.errors }}
+                        <input type="text" class="form-control" id="{{ form_instancia.integration_token.id_for_label }}" placeholder="Digite o token de integração" name="{{ form_instancia.integration_token.name }}" value="{{ form_instancia.integration_token.value|default:"" }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Criar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const formNewInstance = document.querySelector("#formNewInstance")
+    formNewInstance.addEventListener("submit",()=>{
+        const btn = formNewInstance.querySelector('button[type="submit"]')
+        
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                         <span role="status">Loading...</span>`
+        btn.disabled = true;
+
+        
+    })
+</script>
