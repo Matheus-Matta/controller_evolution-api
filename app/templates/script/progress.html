@@ -1,0 +1,93 @@
+<div id="toastPlacement" class="toast-container position-fixed justify-content-end d-flex" style="z-index: 1060 !important; bottom: 10px; left: 10px;">
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const newToastEl = document.querySelector(`#toast_1`);
+            var toastElementList = [].slice.call(document.querySelectorAll('.toastProgress'));
+            var toastList = toastElementList.map(function(toastEl) {
+                return new bootstrap.Toast(toastEl, { autohide: false });  // Definir autohide como false
+            });
+            toastList.forEach(toast => {
+                const btn = toast._element.querySelector(".btn-close-toast");
+                btn.addEventListener("click", () => {
+                    toast.dispose();
+                    newToastEl.remove(); 
+                });
+                toast.show();
+            });
+        const user_id = '{{ user.id }}';
+        const socket = new WebSocket(`ws://${window.location.host}/ws/webhook/progress/${user_id}/`);
+
+        let toastElement;
+        let toast;
+
+        socket.onopen = function(event) {
+            console.log('Conectado ao WebSocket progress');
+        };
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data) {
+                showProgressToast(data.status, data.message, data.user_id, data.porcent);
+            }
+        };
+
+        socket.onclose = function(event) {
+            console.log('Desconectado do WebSocket progress');
+        };
+
+        socket.onerror = function(error) {
+            console.error('Erro no WebSocket progress', error);
+        };
+
+        function showProgressToast(status, message, user_id, porcent) {
+        // Cria o toast usando Bootstrap
+       
+        const item = document.querySelector(`.toast_${user_id}`)
+        if(item){
+           item.querySelector(".toast-title").innerHTML = status
+           const pct = item.querySelector(".progress-bar") 
+           pct.innerHTML = `${porcent}%`
+           pct.style.width = `${porcent}%`
+           if(status == "complete"){
+                item.remove()
+           }
+        } else {
+            const toastHTML = `
+                <div style="width: 300px;" class="toast toastProgress toast_${user_id}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header d-flex justify-content-between align-items-center">
+                        <strong class="me-auto text-primary toast-title">${status}</strong>
+                        <small class="text-body-secondary"></small>
+                        <button type="button" class="btn text-danger p-0 pt-1 btn-close-toast" data-bs-dismiss="toast" aria-label="Close">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div style="background-color: white !important;" class="toast-body pt-1 text-secondary">
+                        ${message}
+                        <div class="progress" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" style="width: ${porcent}%">${porcent}%</div>
+                        </div>
+                    </div>
+                </div>`;
+            document.querySelector("#toastPlacement").insertAdjacentHTML("beforeend", toastHTML)
+            const newToastEl = document.querySelector(`#toast_${user_id}`);
+            var toastElementList = [].slice.call(document.querySelectorAll('.toastProgress'));
+            var toastList = toastElementList.map(function(toastEl) {
+                return new bootstrap.Toast(toastEl, { autohide: false });  // Definir autohide como false
+            });
+            toastList.forEach(toast => {
+                const btn = toast._element.querySelector(".btn-close-toast");
+                btn.addEventListener("click", () => {
+                    toast.dispose();
+                    newToastEl.remove(); 
+                });
+                toast.show();
+            });
+        }
+    }
+    
+    });
+
+</script>

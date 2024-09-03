@@ -1,0 +1,17 @@
+# celery.py
+
+from __future__ import absolute_import, unicode_literals
+import os
+from celery import Celery
+
+# Define o módulo de configurações padrão para o Celery
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'controler.settings')
+os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
+
+app = Celery('controler')
+
+# Lê as configurações do Django no Celery
+app.config_from_object('django.conf:settings', namespace='CELERY')
+
+# Descobre e carrega automaticamente tarefas de todos os aplicativos Django
+app.autodiscover_tasks()

@@ -1,0 +1,54 @@
+:root{
+    --sucess: #05b864;
+    --success: #05b864;
+    --error: #dc3545;
+    --gray: #a1a1a1;
+    --primary: #007bff;
+    --cleanPrimary: #007bffb0;
+    --cleanGray: rgba(0, 0, 0, .125) !important;
+}
+
+body{
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+}
+.display-h{
+    min-height: 95vh;
+    max-height: 95vh;
+}
+.conteiner-opacity{
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(1px);
+    z-index: 1070;
+    top: 0;
+    left: 0;
+}
+.side-itens li {
+    width: 100%;
+}
+.side-tools .side-itens li .active{
+    color: var(--primary) !important;
+}
+.side-tools .side-itens li a{
+    color: var(--gray);
+    font-size: 18px;
+    border-radius: 10px;
+}
+.side-tools .side-itens li a:hover{
+    background-color: var(--cleanPrimary);
+    color: white !important;
+
+}
+.sidebar {
+    border-right: var(--gray) 2px solid;
+}
+.nav-link-active{
+    color: var(--primary) !important;
+}
+

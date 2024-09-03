@@ -49,52 +49,8 @@
                     
                 </div>
             </div>
-            <div class="col-md-8 content pl-2 display-h">
-                <div style="display: flex;" class="flex-row align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <div style="display: flex;" class="flex-row align-items-center">
-                            <h2>Contatos</h2>
-                            <span style="font-size: 0.8vw;" id="contact_qtd" class="badge badge-primary ml-2">
-                                <i class="bi bi-arrow-up-short"></i>
-                                <p class="d-inline">{{ total_contacts }}</p>
-                            </span>
-                        </div>
-                        <span style="font-size: 0.8vw;" class="badge badge-success d-none qtd-ckeck ml-2">0</span>
-                    </div>
-                    <div class="d-flex align-items-center ">
-                        <button style="font-weight: 600;" class="btn btn-outline-success mr-4" data-toggle="modal" data-target="#addContactModal">
-                            <i class="bi bi-plus-square"></i>
-                            Contato
-                        </button>
-                        {% include 'contact_load/partials/nav_pagination.html' %} 
-                    </div>
-                </div>
-                <div class="contact-table-container">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr class="table-header">
-                                <th class="col-md-1 pl-2">
-                                    <span class="ckeck-all-off">#</span>
-                                    <span class="ckeck-all-on d-none">
-                                        <label style="cursor: pointer;" for="check-all" class="d-flex align-items-center m-0">
-                                            <input type="checkbox" id="check-all">
-                                            <span class="text-secondary ml-1">todos</span>
-                                        </label>
-                                    </span>
-                                </th>
-                                <th class="pl-2 contact-name col-md-5">Nome<i class="bi bi-people ml-2"></i></th>
-                                <th class="pl-2 contact-number col-md-3">Numero<i class="bi bi-telephone-inbound ml-2"></i></th>
-                                <th class="pl-2 col-md-3" style="text-align: center;">Tags<i class="bi bi-tags ml-2"></i></th>
-                                <th class="pl-2"></th>
-                            </tr>
-                        </thead>
-                            {% if filter %}
-                                {% include 'contact_load/contact_load_filter.html' %}
-                            {% else %}
-                                {% include 'contact_load/contact_load.html' %}
-                            {% endif %}
-                    </table>
-                </div>
+            <div class="col-md-8 content pl-2 display-h" id="contact-list">
+                {% include 'list_contacts.html' %}
             </div>
         </div>
     </div>
@@ -111,8 +67,11 @@
     <!-- modal qrcode Container -->
     {% if qrcode_image %}
     {% include 'modal/modal_sucessNewInstancia.html' %}
+        <!-- webhook att qr code -->
+        {% include 'script/qrcodeConnect.html' %}
     {% endif %}
-    {% include 'script/qrcodeConnect.html' %}
+
+   
 
     <!-- Toast Container -->
     {% include 'toasts/toast.html' %}
@@ -122,8 +81,10 @@
 
     <!-- modal importar contato -->
     {% include 'modal/importModal.html' %}
+
+    <!-- webhok script -->
+    {% include 'script/progress.html' %}
     
-        
 </div>
     
 

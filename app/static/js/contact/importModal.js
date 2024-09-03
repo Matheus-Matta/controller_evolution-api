@@ -28,9 +28,18 @@ document.getElementById('import-submit').addEventListener('click', function(even
     })
     .then(response => response.json())
     .then(data =>{
-        console.log(data)
-        new_toast(data.message, data.status)
-        location.reload()
+        form_import.style.opacity = '1'
+        form_import.style.cursor = 'initial'
+        spinner_button(this,false)
+        if(data.status != "success"){
+            new_toast(data.message, data.status)
+        } else {
+            new_toast(data.message, data.status)
+            const modalElement = document.getElementById('importModal');
+            modalElement.classList.remove("show")
+            const modalbackdrop = document.querySelector('.modal-backdrop');
+            modalbackdrop.classList.remove("show")
+        }
     })
     .catch(error => console.error('Erro:', error));
 });

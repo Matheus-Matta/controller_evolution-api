@@ -1,11 +1,11 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const userId = '{{ user.id }}';
-        const socket = new WebSocket('ws://' + window.location.host + '/ws/webhook/' + userId + '/');
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/webhook/progress/' + userId + '/');
         let interval_id;
         socket.onopen = function(event) {
-            console.log('Conectado ao WebSocket');
-            };
+            console.log('Conectado ao WebSocket qrcode');
+        };
 
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
@@ -20,11 +20,11 @@
             };
 
         socket.onclose = function(event) {
-            console.log('Desconectado do WebSocket');
+            console.log('Desconectado do WebSocket qrcode');
             };
 
         socket.onerror = function(error) {
-            console.error('Erro no WebSocket', error);
+            console.error('Erro no WebSocket qrcode', error);
             };
     });
 </script>

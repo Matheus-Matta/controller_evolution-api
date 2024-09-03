@@ -61,52 +61,67 @@ class ExcelHandler:
     
    
     def validate_phone_number(self, phone_number):
-        phone_number = re.sub(r'\D', '', phone_number)  # Remove todos os caracteres não numéricos
+        try:
+            # Converte o número para string
+            phone_number = str(phone_number)
+            # Verifica se o número está vazio após a conversão
+            if not phone_number:
+                return False
+            # Remove todos os caracteres não numéricos
+            phone_number = re.sub(r'\D', '', phone_number)
+            # Verifica se o número já contém o código do país (55)
+            if not phone_number.startswith('55'):
+                # Adiciona o código do país (55) se não estiver presente e o número tiver 10 ou 11 dígitos
+                if len(phone_number) == 10 or len(phone_number) == 11:
+                    phone_number = f'55{phone_number}'
+                else:
+                    return False  # Número inválido se não tiver o tamanho esperado
 
-        # Verifica se o número já contém o código do país (55)
-        if not phone_number.startswith('55'):
-            # Adiciona o código do país (55) se não estiver presente e o número tiver 10 ou 11 dígitos
-            if len(phone_number) == 10 or len(phone_number) == 11:  # Considerando DDD + número
-                phone_number = f'55{phone_number}'
+            # Valida o formato 5521912345678
+            if re.match(r'^55\d{10,12}$', phone_number):
+                return phone_number
             else:
-                return False  # Número inválido se não tiver o tamanho esperado
-
-        # Valida o formato 5521912345678
-        if re.match(r'^55\d{10,12}$', phone_number):
-            return phone_number
-        else:
-            return False  # Número inválido
-    
+                return False  # Número inválido
+        except Exception as e:
+            print(f'[ERROR] >> Numero invalido: {str(e)}')
+            return False
+      
     def get_contacts(self, number_column, name_column, limit=None):
-        contacts = []
-        if self.file_path.endswith('.xls'):
-            final = self.sheet.nrows
-            if limit:
-                final = min(limit + 1, final)
-            number_index = self.column_letter_to_index(number_column)
-            name_index = self.column_letter_to_index(name_column)
-            for i in range(1, final):
-                numero_celular = self.sheet.cell_value(i, number_index)
-                nome = self.sheet.cell_value(i, name_index)
-                numero_celular = self.validate_phone_number(numero_celular)
-                if not numero_celular or not nome:
-                    continue
-                contacts.append({
-                    'name': nome,
-                    'number': numero_celular,
-                })
-        elif self.file_path.endswith('.xlsx'):
-            final = self.sheet.max_row
-            if limit:
-                final = min(limit + 1, final)
-            for i in range(2, final + 1):  # Começa em 2 para pular o cabeçalho
-                numero_celular = self.sheet[f'{number_column}{i}'].value
-                nome = self.sheet[f'{name_column}{i}'].value
-                numero_celular = self.validate_phone_number(numero_celular)
-                if not numero_celular or not nome:
-                    continue
-                contacts.append({
-                    'name': nome,
-                    'number': numero_celular,
-                })
+        try:
+            contacts = []
+            if self.file_path.endswith('.xls'):
+                final = self.sheet.nrows
+                if limit:
+                    final = min(limit + 1, final)
+                number_index = self.column_letter_to_index(number_column)
+                name_index = self.column_letter_to_index(name_column)
+                for i in range(1, final):
+                    numero_celular = self.sheet.cell_value(i, number_index)
+                    nome = self.sheet.cell_value(i, name_index)
+                    numero_celular = self.validate_phone_number(numero_celular)
+                    if not numero_celular or not nome:
+                        continue
+                    contacts.append({
+                        'name': nome,
+                        'number': numero_celular,
+                    })
+            elif self.file_path.endswith('.xlsx'):
+                final = self.sheet.max_row
+                if limit:
+                    final = min(limit + 1, final)
+                for i in range(2, final + 1):  # Começa em 2 para pular o cabeçalho
+                    numero_celular = self.sheet[f'{number_column}{i}'].value
+                    nome = self.sheet[f'{name_column}{i}'].value
+                    numero_celular = self.validate_phone_number(numero_celular)
+                    if not numero_celular or not nome:
+                        continue
+                    contacts.append({
+                        'name': nome,
+                        'number': numero_celular,
+                    })
+        except Exception as e:
+            print(f'[ERROR] >> extrair excel: {str(e)}')
+            return False
+        
         return contacts
+        

@@ -2,22 +2,28 @@ import  {new_toast , loadSpinner}  from './element.js';
 
 // Função de filtro de pesquisa
 document.querySelector('#search-bar').addEventListener('input', function() {
-    const searchQuery = this.value.toLowerCase();
-    searchList(searchQuery)
+    const query = this.value
+    const newUrl = new URL(window.location.href);
+    if (query.trim()) {
+        newUrl.searchParams.set('query', query);
+    } else {
+        newUrl.searchParams.delete('query');
+    }
+    window.history.pushState({}, '', newUrl);
+    fetch("contact/filter-contacts?query=" + encodeURIComponent(query))
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('contact-list').innerHTML = data.list_contact;
+            } else {
+                new_toast(data.message,"error");
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            new_toast('Ocorreu um erro ao buscar os contatos. Tente novamente mais tarde.',"error");
+        });
 });
-
-function searchList(query){
-    const contacts = document.querySelectorAll('.contact-table-container table tbody tr');
-    contacts.forEach(contact => {
-        const name = contact.querySelector('.contact-name').textContent.toLowerCase();
-        const number = contact.querySelector('.contact-number').textContent.toLowerCase();
-        if (name.includes(query) || number.includes(query)) {
-            contact.classList.remove('d-none');
-        } else {
-            contact.classList.add('d-none');
-        }
-    });
-}
 
 // Função para excluir contatos
 document.querySelector('.btn-del-tag').addEventListener('click', function() {
@@ -42,23 +48,7 @@ document.querySelector('.btn-del-tag').addEventListener('click', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    new_toast(data.message, 'success');
-                    checkboxes.forEach(checkbox => {
-                        checkbox.closest('tr').remove();
-                    });
-                    const rows = document.querySelectorAll('.contact-table-container tbody tr');
-                    document.querySelector("#contact_qtd p").innerText = rows.length
-                    document.querySelector(".qtd-ckeck").classList.add("d-none")
-                    document.querySelector('#search-bar').value = ''
-                    rows.forEach((row,i) =>{
-                        row.querySelector("td[data-counter]").innerText = i+1
-                    })
-                    searchList('')
-                    const checkAllOn = document.querySelector(".ckeck-all-on");
-                    const checkAllOff = document.querySelector(".ckeck-all-off");
-                    checkAllOff.classList.remove("d-none");
-                    checkAllOn.classList.add("d-none");
-                    checkAllOn.querySelector("input").checked = false
+                    location.reload();
                 } else {
                     new_toast(data.message, 'error');
                 }
@@ -72,3 +62,15 @@ document.querySelector('.btn-del-tag').addEventListener('click', function() {
     }
 });
 
+// função para atualizar o numero dos contatos
+const urlParams = new URLSearchParams(window.location.search);
+const pageNumber = urlParams.get('page') ? parseInt(urlParams.get('page')) : 1;
+if (pageNumber) {
+    const counters = document.querySelectorAll('td[data-counter]');
+    counters.forEach((td) => {
+        const counterValue = parseInt(td.getAttribute('data-counter')); // Obtém o valor de data-counter
+        const multipliedValue = counterValue + ((pageNumber-1)*100); // Multiplica pelo número da página
+        td.textContent = multipliedValue;
+        td.setAttribute("data-counter", multipliedValue);
+    });
+}

@@ -11,11 +11,35 @@ import os
 from django.conf import settings
 from django.http import JsonResponse
 import json
+from .tasks import *
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
+@login_required
 def contact(request):
+    data = {
+            'user_id': 1,
+            'status':2,
+            'message': 3,
+            'porcent': 4,
+            'filename': 5
+        }
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+                f'progress_1',
+                    {
+                    'type': 'progress',
+                    'progress': data
+                }
+            )
     if request.method == 'GET':
         # Obtém todos os contatos do usuário
-        contacts = Contact.objects.filter(user=request.user)
+        # Enviar mensagem de progresso ao iniciar a leitura do arquivo
+        query = request.GET.get('query')
+        if query:
+            contacts = Contact.objects.filter(name__icontains=query,user=request.user)
+        else:
+            contacts = Contact.objects.filter(user=request.user)
         # Configuração da paginação
         paginator = Paginator(contacts, 100)  # Mostra 100 contatos por página
         page_number = request.GET.get('page')  # Obtém o número da página da URL
@@ -81,8 +105,37 @@ def update_contact(request):
             print("ERROR AO ATUALIZAR O CONTATO")
             JsonResponse({'status': 'Error'}, status=400)
 
-    return JsonResponse({'status': 'sucess'}, status=200)
+    return JsonResponse({'status': 'success'}, status=200)
 
+def filter_contact_by_name(request):
+    if request.method == 'GET':
+        try:
+            query = request.GET.get('query')
+            if query:
+                contacts = Contact.objects.filter(name__icontains=query,user=request.user)
+            else:
+                contacts = Contact.objects.filter(user=request.user)
+
+            paginator = Paginator(contacts, 100)  # Mostra 100 contatos por página
+            page_number = request.GET.get('page')  # Obtém o número da página da URL
+            page_obj = paginator.get_page(page_number)  # Obtém os contatos da página atual
+            total_contacts = contacts.count()
+            # Obtém as tags do usuário
+            tags = Tag.objects.filter(user=request.user).distinct()
+
+            context =  {
+                'contacts': page_obj.object_list,  # Contatos da página atual
+                'page_obj': page_obj,              # Objeto da página para controle no template
+                'tags': tags,                      # Tags do usuário
+                'total_contacts': total_contacts,  # Quantidade total de contatos
+            }
+            # Renderiza o template com os contatos paginados
+            html = render_to_string('list_contacts.html', context)
+            return JsonResponse({'status': 'success', 'list_contact': html}, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return redirect('user_login')
+    
 
 @login_required
 def delete_contacts(request):
@@ -94,8 +147,9 @@ def delete_contacts(request):
                 return JsonResponse({'status': 'error', 'message': 'Contatos não fornecidos'}, status=400)
             contacts = Contact.objects.filter(id__in=contacts_ids, user=request.user)
             contacts.delete()[0]
-            print(f"[{request.user}] Contatos Excluidos: -> {contacts_ids}")
-            return JsonResponse({'status': 'success', 'message': f'{len(contacts_ids)} contatos excluídos com sucesso!'}, status=200)
+            messages.success(request,  f'{len(contacts_ids)} contatos excluídos com sucesso!')
+            print(f"[{request.user}] Contatos Excluidos: -> {len(contacts_ids)}")
+            return JsonResponse({'status': 'success'}, status=200)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': 'Houve um problema ao excluir os contatos', 'details': str(e)}, status=500)
 
@@ -107,10 +161,12 @@ def import_contact(request):
     if request.method == 'POST':
         try:
             # Recebe os parâmetros do request
+           
             name_column = request.POST.get('name_column')
             number_column = request.POST.get('number_column')
             limit = int(request.POST.get('limit_rows')) if request.POST.get('limit_rows') else None
             allow_duplicates = request.POST.get('allow_duplicates')
+            tags = request.POST.getlist('tags')
             if not request.FILES:
                 return JsonResponse({'status': 'error', 'message': 'Arquivo está vazio!'})
             if not name_column:
@@ -136,37 +192,9 @@ def import_contact(request):
                 for chunk in uploaded_file.chunks():
                     f.write(chunk)
            
-            try:
-               handler = ExcelHandler(file_path)
-               contacts = handler.get_contacts(number_column, name_column, limit) 
-            except ValueError as e:
-                print(e)
-                return JsonResponse({'status': 'error', 'message': 'error ao ler excel: '+str(e)})
-            
-            # Adiciona os contatos ao banco de dados
-            created_contacts = []
-            for contact in contacts:
-                name = contact.get('name')
-                number = contact.get('number')
-                if not allow_duplicates and Contact.objects.filter(user=request.user, number=number).exists():
-                    continue
-                new_contact = Contact.objects.create(user=request.user, name=name, number=number)
-                # Adiciona o novo contato à lista de contatos criados
-                if new_contact:
-                    created_contacts.append(new_contact)
-                tags = request.POST.getlist('tags')
-                if tags:
-                    tag_objects = Tag.objects.filter(id__in=tags, user=request.user)
-                    if tag_objects.exists():
-                        new_contact.tags.set(tag_objects)
-                    
-            print(f"IMPORT_CONTACTS: [{request.user}] -> {len(created_contacts)} contatos criados por planilha")
-            # Retorna a resposta JSON com os contatos extraídos
-            messages.success(request, f'{len(created_contacts)} contatos importados com sucesso!')
-            if file_path and os.path.exists(file_path):
-                os.remove(file_path)
-            return JsonResponse({'status': 'success', 'message': f'{len(created_contacts)} contatos importados com sucesso!', 'file_path': file_path})
-
+           # Chama a tarefa Celery para processar o arquivo Excel em segundo plano
+            process_excel_file.delay(file_name, file_path, name_column, number_column, limit, allow_duplicates, tags, request.user.id)
+            return JsonResponse({'status': 'success','message':'O processo de importação foi iniciado. Você será notificado quando estiver concluído.'},status=201)
         except Exception as e:
             print(e)
             return JsonResponse({'status': 'error', 'message':'error ao salvar contato: '+str(e)})

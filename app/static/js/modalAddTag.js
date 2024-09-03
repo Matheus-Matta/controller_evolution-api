@@ -1,4 +1,4 @@
-import  { new_toast, activeTag }  from './element.js';
+import  { new_toast, activeTag, spinner_button }  from './element.js';
 
 document.querySelectorAll('.list-tag .list-group label').forEach((tag)=>{
     activeTag(tag)
@@ -13,7 +13,14 @@ document.querySelector('.btn-add-tag').addEventListener('click',()=>{
     });
 
     if (selectedContacts.length > 0) {
-        document.getElementById('selected-contacts').value = selectedContacts.join(',');
+
+        const box = document.querySelector('#conteiner_checkAll .ckeck-all-on')
+        if(box.classList.contains("check-all")){
+            document.getElementById('selected-contacts').value = "all"
+        } else {
+            document.getElementById('selected-contacts').value = selectedContacts.join(',');
+        }
+
         $('#addTagModal').modal('show');
     } else {
         alert('Selecione pelo menos um contato.');
@@ -24,9 +31,16 @@ document.querySelector('.btn-add-tag').addEventListener('click',()=>{
 document.getElementById('addTagform').addEventListener('submit', function(event) {
     event.preventDefault();
     const formData = new FormData(this);
-    const selectedContacts = formData.get('selected-contacts').split(',');
+    let selectedContacts = formData.get('selected-contacts')
+    if(selectedContacts != 'all'){
+        selectedContacts = selectedContacts.split(',');
+    }
     const activeTags = Array.from(document.querySelectorAll('.active_tag input')).map(input => input.value);
     const csrfToken = formData.get('csrfmiddlewaretoken');
+    spinner_button(this.querySelector('button[type="submit"]'),true)
+    const modal = document.querySelector("#addTagModal .modal-content")
+    modal.style.opacity = '0.5'
+    modal.style.cursor = "default"
     fetch('/contact/add_tags_to_contacts', {
         method: 'POST',
         headers: {
@@ -41,6 +55,9 @@ document.getElementById('addTagform').addEventListener('submit', function(event)
     .then(response => {
         if (!response.ok) {
             new_toast("erro ao adicionar tags",'error')
+            spinner_button(this.querySelector('button[type="submit"]'),false)
+            modal.style.opacity = '0.5'
+            modal.style.cursor = "default"
             throw new Error('Erro ao adicionar tags aos contatos');
         } else {
             location.reload();

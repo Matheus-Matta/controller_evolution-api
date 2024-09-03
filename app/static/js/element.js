@@ -55,7 +55,8 @@ export function spinner_button(btn,on){
         <span role="status">Loading...</span>`
         btn.disabled = true;
     } else {
-       html = btn.getAttribute('data-html');
+       const html = btn.getAttribute('data-html');
        btn.innerHTML = html
+       btn.disabled = false;
     }
 }

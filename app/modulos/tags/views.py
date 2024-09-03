@@ -34,22 +34,25 @@ def add_tags_to_contacts(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            contacts_ids = data.get("contacts")
+            contact = data.get("contacts")
             tags_id = data.get("tags")
-            if not contacts_ids or not tags_id:
-                return JsonResponse({'error': 'Contatos ou tags não fornecidos'}, status=400)
-            contacts = Contact.objects.filter(id__in=contacts_ids, user=request.user)
+            if not contact or not tags_id:
+                    return JsonResponse({'error': 'Contatos ou tags não fornecidos'}, status=400)
+            if contact == "all":
+                contacts = Contact.objects.filter(user=request.user)
+            else:    
+                contacts = Contact.objects.filter(id__in=contact, user=request.user)
             tags = Tag.objects.filter(id__in=tags_id, user=request.user)
             for contact in contacts:
                 for tag in tags:
                     if tag not in contact.tags.all():
                         contact.tags.add(tag)
                         print(f"[{request.user}] Tag adicionada: {contact} -> {tag}")
+            messages.success(request, f'Tags adicionadas a {len(contacts)} contatos com sucesso!')
             return JsonResponse({'message': 'Tags adicionadas aos contatos com sucesso!'}, status=200)
         except Exception as e:
             print(e)
             return JsonResponse({'error': 'Houve um problema ao adicionar as tags aos contatos', 'details': str(e)}, status=500)
-
     return redirect('user_login')
 
 @login_required

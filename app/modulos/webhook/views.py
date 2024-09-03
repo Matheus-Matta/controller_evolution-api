@@ -5,6 +5,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from app.modulos.instance.models import Instance
 from app.modulos.contact.utils import create_contact
+from celery import shared_task
 
 @csrf_exempt
 def webhook_view(request):
@@ -73,3 +74,25 @@ def webhook_view(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     return JsonResponse({'status': 'invalid method'}, status=405)
+
+@csrf_exempt
+def webhook_progress(request):
+    if request.method == 'POST':
+        try:
+            event = json.loads(request.body)
+            user_id = event.get('user_id')
+            if not user_id:
+                return JsonResponse({'message': f'faltou algum argumento'}, status=401)
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'progress_{user_id}',
+                    {
+                    'type': 'progress',
+                    'progress': event
+                }
+            )
+            return JsonResponse({'message': 'success'}, status=201)
+        except Exception as e:
+           print(e)
+           return JsonResponse({'message': f'error ao executar view {str(e)}'}, status=500)
+    return JsonResponse({'message': 'invalid method'}, status=405)
