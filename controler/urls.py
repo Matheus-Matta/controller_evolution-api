@@ -26,6 +26,8 @@ urlpatterns = [
     path('', include('app.modulos.instance.urls')),
     path('', include('app.modulos.contact.urls')),
     path('', include('app.modulos.tags.urls')),
+    path('', include('app.modulos.campanha.urls')),
+
 
 ]
 

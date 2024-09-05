@@ -78,8 +78,12 @@
     <!-- modal qrcode Container -->
     {% if qrcode_image %}
     {% include 'modal/modal_sucessNewInstancia.html' %}
+        <!-- webhook att qr code -->
+        {% include 'script/qrcodeConnect.html' %}
     {% endif %}
-    {% include 'script/qrcodeConnect.html' %}
+ 
+     <!-- webhok script -->
+    {% include 'script/progress.html' %}
 
 
     <!-- Toast Container -->

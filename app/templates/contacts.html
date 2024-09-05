@@ -27,10 +27,16 @@
                     {% endif %}
                 </div>
                 <div class="search-bar-container mt-2 display-h">
-                    <label for="search-bar" class="position-relative">
-                        <i  style="top: 5px; bottom: 0; left: 10px;" class="bi bi-search position-absolute"></i>
-                        <input style="width: 16vw; padding-left: 30px !important;" type="text" id="search-bar" class="form-control p-3" placeholder="Pesquisar contato">
-                    </label>
+                    <form method="GET" id="search-bar-form" action="">
+                        <label for="search-bar" class="position-relative">
+                            <i style="top: 5px; bottom: 0; left: 10px;" class="bi bi-search position-absolute"></i>
+                            <input style="width: 16vw; padding-left: 30px !important;" type="text" id="search-bar" name="name" class="form-control p-3" placeholder="Pesquisar contato" 
+                            value="{% if name %}{{ name }}{% endif %}">
+                        </label>
+                        {% if tag_name %}
+                            <input type="hidden" name="tag" value="{{ tag_name }}">
+                        {% endif %}
+                    </form>
                     <button style="font-size: 0.9vw; text-wrap: nowrap; padding: 0.3vw !important;" class="btn btn-success btn-tags btn-add-tag col-md-6 p-0" disabled><i class="bi bi-tag mr-2"></i>Adicionar tag</button>
                     <button style="font-size: 0.9vw; text-wrap: nowrap; padding: 0.3vw !important;" class="btn btn-danger btn-tags btn-del-tag col-md-4 p-0" disabled><i class="bi bi-trash mr-2"></i>Excluir</button>
                     <h6 class="d-block  mt-3">lista de contatos<i class="bi bi-list-nested ml-2"></i></h6>
@@ -71,6 +77,8 @@
         {% include 'script/qrcodeConnect.html' %}
     {% endif %}
 
+    <!-- webhok script -->
+    {% include 'script/progress.html' %}
    
 
     <!-- Toast Container -->
@@ -82,8 +90,7 @@
     <!-- modal importar contato -->
     {% include 'modal/importModal.html' %}
 
-    <!-- webhok script -->
-    {% include 'script/progress.html' %}
+    
     
 </div>
     

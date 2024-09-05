@@ -2,7 +2,8 @@
 
 </div>
 
-<script>
+<script type="module">
+    import { new_toast } from "./static/js/element.js"
     document.addEventListener('DOMContentLoaded', function() {
         const newToastEl = document.querySelector(`#toast_1`);
             var toastElementList = [].slice.call(document.querySelectorAll('.toastProgress'));
@@ -44,15 +45,23 @@
 
         function showProgressToast(status, message, user_id, porcent) {
         // Cria o toast usando Bootstrap
-       
         const item = document.querySelector(`.toast_${user_id}`)
         if(item){
            item.querySelector(".toast-title").innerHTML = status
            const pct = item.querySelector(".progress-bar") 
            pct.innerHTML = `${porcent}%`
            pct.style.width = `${porcent}%`
-           if(status == "complete"){
+           if(status == 'error'){
+                new_toast(message, status)
                 item.remove()
+           }
+           if(porcent == 100){
+                new_toast('Contatos da planilha salvo com sucesso', 'success')
+                item.querySelector(".toast-title").innerHTML = 'Completo'
+                pct.style.backgroundColor = "var(--success)"
+                setTimeout(() => {
+                    item.remove()
+                }, 3000);           
            }
         } else {
             const toastHTML = `

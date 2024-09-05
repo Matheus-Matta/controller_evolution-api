@@ -7,6 +7,7 @@ from .models import Tag
 from django.http import JsonResponse
 import json
 from django.core.paginator import Paginator
+from .tasks import add_tags_to_contacts_task
 
 @login_required
 def create_tag(request):
@@ -32,60 +33,27 @@ def create_tag(request):
 @login_required
 def add_tags_to_contacts(request):
     if request.method == 'POST':
+       if request.method == 'POST':
         try:
             data = json.loads(request.body)
             contact = data.get("contacts")
             tags_id = data.get("tags")
+
             if not contact or not tags_id:
-                    return JsonResponse({'error': 'Contatos ou tags não fornecidos'}, status=400)
-            if contact == "all":
-                contacts = Contact.objects.filter(user=request.user)
-            else:    
-                contacts = Contact.objects.filter(id__in=contact, user=request.user)
-            tags = Tag.objects.filter(id__in=tags_id, user=request.user)
-            for contact in contacts:
-                for tag in tags:
-                    if tag not in contact.tags.all():
-                        contact.tags.add(tag)
-                        print(f"[{request.user}] Tag adicionada: {contact} -> {tag}")
-            messages.success(request, f'Tags adicionadas a {len(contacts)} contatos com sucesso!')
-            return JsonResponse({'message': 'Tags adicionadas aos contatos com sucesso!'}, status=200)
+                return JsonResponse({'error': 'Contatos ou tags não fornecidos'}, status=400)
+
+            # Chame a tarefa Celery
+            add_tags_to_contacts_task.apply_async(args=(request.user.id, contact, tags_id), queue='default')
+
+            # Retorne uma resposta imediata ao cliente
+            return JsonResponse({'message': 'Processamento em segundo plano iniciado. Você será notificado ao término.'}, status=200)
         except Exception as e:
             print(e)
             return JsonResponse({'error': 'Houve um problema ao adicionar as tags aos contatos', 'details': str(e)}, status=500)
     return redirect('user_login')
 
 @login_required
-def filter_contacts_by_tag(request, tag_name):
-    if request.method == 'GET':
-        try:
-            tag = Tag.objects.filter(name=tag_name, user=request.user).first()
-            if not tag:
-                return redirect('contact')
-            contacts = Contact.objects.filter(tags=tag, user=request.user)
-            paginator = Paginator(contacts, 100)  # Mostra 100 contatos por página
-            page_number = request.GET.get('page')  # Obtém o número da página da URL
-            page_obj = paginator.get_page(page_number)  # Obtém os contatos da página atual
-            # Total de contatos
-            total_contacts = contacts.count()
-            tags = Tag.objects.filter(user=request.user).distinct()
-            return render(request, 'contacts.html', {
-                'contacts': page_obj.object_list,  # Contatos da página atual
-                'page_obj': page_obj, # Objeto da página para controle no template
-                'tags': tags, 
-                'tag_name': tag.name, # Tags do usuário
-                'total_contacts': total_contacts,
-                'filter': True  # Quantidade total de contatos
-            })
-        except Exception as e:
-            print(e)
-            messages.error(request, 'Essa tag não existe!')
-            return redirect('contact')
-    return redirect('user_login')
-
-@login_required
 def delete_tag(request):
-    print(request.POST, request.body)
     if request.method == 'POST':
         try:
             tag_id = request.POST.get("tag_id")
@@ -95,7 +63,7 @@ def delete_tag(request):
             if not tag:
                 messages.error(request, 'Tag não encontrada!')
             else:
-                tag.delete()
+                tag.delete() # deleta tag
                 messages.success(request, 'Tag deletada com sucesso!')
         except Exception as e:
            messages.error(request, f'Erro interno: {str(e)}')

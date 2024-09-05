@@ -17,45 +17,42 @@ from channels.layers import get_channel_layer
 
 @login_required
 def contact(request):
-    data = {
-            'user_id': 1,
-            'status':2,
-            'message': 3,
-            'porcent': 4,
-            'filename': 5
-        }
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-                f'progress_1',
-                    {
-                    'type': 'progress',
-                    'progress': data
-                }
-            )
     if request.method == 'GET':
-        # Obtém todos os contatos do usuário
-        # Enviar mensagem de progresso ao iniciar a leitura do arquivo
-        query = request.GET.get('query')
-        if query:
-            contacts = Contact.objects.filter(name__icontains=query,user=request.user)
-        else:
-            contacts = Contact.objects.filter(user=request.user)
+        # Obtém a consulta de pesquisa e a tag da URL
+        tag_name = request.GET.get('tag')
+        contact_name = request.GET.get('name')
+        contacts = Contact.objects.filter(user=request.user)
+
+        # Filtra por tag, se fornecido
+        if tag_name:
+            tag = Tag.objects.filter(user=request.user, name__icontains=tag_name).first()
+            if tag:
+                contacts = contacts.filter(tags=tag)
+
+        # Filtra por nome, se fornecido
+        if contact_name:
+            contacts = contacts.filter(name__icontains=contact_name)
+
         # Configuração da paginação
         paginator = Paginator(contacts, 100)  # Mostra 100 contatos por página
         page_number = request.GET.get('page')  # Obtém o número da página da URL
-        page_obj = paginator.get_page(page_number)  # Obtém os contatos da página atual
+        page_obj = paginator.get_page(page_number) # Obtém os contatos da página atual
+
         # Total de contatos
         total_contacts = contacts.count()
         # Obtém as tags do usuário
         tags = Tag.objects.filter(user=request.user).distinct()
-        # Renderiza o template com os contatos paginados
-        return render(request, 'contacts.html', {
-            'contacts': page_obj.object_list,  # Contatos da página atual
-            'page_obj': page_obj,              # Objeto da página para controle no template
-            'tags': tags,                      # Tags do usuário
-            'total_contacts': total_contacts,  # Quantidade total de contatos
-        })
-
+        
+        context = { 
+                'contacts': page_obj.object_list,  # Contatos da página atual
+                'page_obj': page_obj,              # Objeto da página para controle no template
+                'tags': tags,                      # Tags do usuário
+                'total_contacts': total_contacts,  # Quantidade total de contatos
+                'tag_name': tag_name if tag_name else False,
+                'name': contact_name if contact_name else False,
+                'filter': True if tag_name or contact_name else False
+        }
+        return render(request, 'contacts.html', context)
     return redirect('user_login')
 
 @login_required
@@ -123,15 +120,7 @@ def filter_contact_by_name(request):
             # Obtém as tags do usuário
             tags = Tag.objects.filter(user=request.user).distinct()
 
-            context =  {
-                'contacts': page_obj.object_list,  # Contatos da página atual
-                'page_obj': page_obj,              # Objeto da página para controle no template
-                'tags': tags,                      # Tags do usuário
-                'total_contacts': total_contacts,  # Quantidade total de contatos
-            }
-            # Renderiza o template com os contatos paginados
-            html = render_to_string('list_contacts.html', context)
-            return JsonResponse({'status': 'success', 'list_contact': html}, status=200)
+            
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return redirect('user_login')
@@ -192,8 +181,8 @@ def import_contact(request):
                 for chunk in uploaded_file.chunks():
                     f.write(chunk)
            
-           # Chama a tarefa Celery para processar o arquivo Excel em segundo plano
-            process_excel_file.delay(file_name, file_path, name_column, number_column, limit, allow_duplicates, tags, request.user.id)
+            # Chama a tarefa Celery para processar o arquivo Excel em segundo plano
+            process_excel_file.apply_async((file_path, name_column, number_column, limit, allow_duplicates, tags, request.user.id), queue='default')
             return JsonResponse({'status': 'success','message':'O processo de importação foi iniciado. Você será notificado quando estiver concluído.'},status=201)
         except Exception as e:
             print(e)

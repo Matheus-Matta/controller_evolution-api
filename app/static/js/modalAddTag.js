@@ -13,14 +13,7 @@ document.querySelector('.btn-add-tag').addEventListener('click',()=>{
     });
 
     if (selectedContacts.length > 0) {
-
-        const box = document.querySelector('#conteiner_checkAll .ckeck-all-on')
-        if(box.classList.contains("check-all")){
-            document.getElementById('selected-contacts').value = "all"
-        } else {
-            document.getElementById('selected-contacts').value = selectedContacts.join(',');
-        }
-
+        document.getElementById('selected-contacts').value = selectedContacts.join(',');
         $('#addTagModal').modal('show');
     } else {
         alert('Selecione pelo menos um contato.');
@@ -31,15 +24,12 @@ document.querySelector('.btn-add-tag').addEventListener('click',()=>{
 document.getElementById('addTagform').addEventListener('submit', function(event) {
     event.preventDefault();
     const formData = new FormData(this);
-    let selectedContacts = formData.get('selected-contacts')
-    if(selectedContacts != 'all'){
-        selectedContacts = selectedContacts.split(',');
-    }
+    let selectedContacts = formData.get('selected-contacts').split(',');
     const activeTags = Array.from(document.querySelectorAll('.active_tag input')).map(input => input.value);
     const csrfToken = formData.get('csrfmiddlewaretoken');
     spinner_button(this.querySelector('button[type="submit"]'),true)
     const modal = document.querySelector("#addTagModal .modal-content")
-    modal.style.opacity = '0.5'
+    modal.style.opacity = '0.8'
     modal.style.cursor = "default"
     fetch('/contact/add_tags_to_contacts', {
         method: 'POST',
@@ -56,11 +46,13 @@ document.getElementById('addTagform').addEventListener('submit', function(event)
         if (!response.ok) {
             new_toast("erro ao adicionar tags",'error')
             spinner_button(this.querySelector('button[type="submit"]'),false)
-            modal.style.opacity = '0.5'
-            modal.style.cursor = "default"
+            modal.style.opacity = '1'
+            modal.style.cursor = "initial"
             throw new Error('Erro ao adicionar tags aos contatos');
         } else {
-            location.reload();
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         }
     })
     .catch(error => {

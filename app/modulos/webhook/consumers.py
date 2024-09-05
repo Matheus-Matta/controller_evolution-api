@@ -66,7 +66,6 @@ class ProgressConsumer(AsyncWebsocketConsumer):
     async def progress(self, event):
         if 'progress' in event:
             progress_data = event['progress']
-            print(progress_data)
             # Enviar mensagem de progresso para o WebSocket
             await self.send(text_data=json.dumps(progress_data))
         else:

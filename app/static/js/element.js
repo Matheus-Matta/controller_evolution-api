@@ -1,5 +1,5 @@
 export function new_toast(message,status){
-const n = document.querySelectorAll('.toast-container .toast').length + 1
+const n = document.querySelectorAll('#toast_feedback .toast').length + 1
 const html = `
              <div class="toast align-items-center" id='new_toast${n}' role="alert" aria-live="assertive" aria-atomic="true" style='background-color: var(--${status});'>
                         <div class="d-flex">
@@ -9,7 +9,7 @@ const html = `
                         </div>
                     </div>
                 </div>`
-    document.querySelector(".toast-container").insertAdjacentHTML("beforeend", html)
+    document.querySelector("#toast_feedback").insertAdjacentHTML("beforeend", html)
     var toastEl = document.getElementById('new_toast'+n);
     let delay = 5000
     var toast = new bootstrap.Toast(toastEl, { delay: delay });

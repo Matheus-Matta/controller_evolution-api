@@ -11,6 +11,9 @@
             <span style="font-size: 0.8vw;" class="badge badge-success d-none qtd-ckeck ml-2">0</span>
         </div>
         <div class="d-flex align-items-center ">
+            <a href="{% url 'campanha' %}?{% if tag_name %}tag={{ tag_name }}{% endif %}{% if name %}&name={{ name }}{% endif %}">
+                <button style="background-color: var(--purple); font-weight: 500; letter-spacing: 1px;" class="btn text-white mr-2">Campanha</button>
+            </a>
             <button style="font-weight: 600;" class="btn btn-outline-success mr-4" data-toggle="modal" data-target="#addContactModal">
                 <i class="bi bi-plus-square"></i>
                 Contato

@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'app.modulos.webhook',
     'app.modulos.contact',
     'app.modulos.tags',
+    'app.modulos.campanha',
+
 ]
 
 ASGI_APPLICATION = 'controler.asgi.application'
@@ -59,7 +61,10 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [config("REDIS_URL")],
+            "capacity": 1000,  # aumentar o valor conforme necessário
+            "expiry": 10,
         },
+        "WORKERS": 4 
     },
 }
 
@@ -174,10 +179,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = 'user_login'
 
-
-
 # configurações do Celery
 CELERY_BROKER_URL = config("REDIS_URL")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+

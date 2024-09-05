@@ -15,3 +15,19 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Descobre e carrega automaticamente tarefas de todos os aplicativos Django
 app.autodiscover_tasks()
+
+# Definindo filas e rotas
+app.conf.task_queues = {
+    'default': {
+        'exchange': 'default',
+        'routing_key': 'default',
+    },
+    'webhook': {
+        'exchange': 'webhook',
+        'routing_key': 'webhook',
+    }
+}
+
+app.conf.task_routes = {
+    'app.modulos.contact.tasks.webhookSend': {'queue': 'webhook'},
+}

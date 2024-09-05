@@ -1,5 +1,5 @@
 <div class="col-md-12 mt-2 p-0">
-    <a href="{% url 'filter_contacts_by_tag' tag.name %}" style="text-decoration: none;">
+    <a href="{% url 'contact' %}?tag={{ tag.name }}" style="text-decoration: none;">
         <button type="button" style="font-size: 0.6vw;" class="btn btn-outline-secondary p-2 col-md-10 m-0">
             {{ tag.name }}
         </button>

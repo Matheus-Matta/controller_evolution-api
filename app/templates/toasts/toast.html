@@ -1,4 +1,4 @@
-<div class="toast-container position-fixed" style="z-index: 1060 !important; top: 10px; right: 10px;">
+<div id="toast_feedback" class="toast-container position-fixed" style="z-index: 1060 !important; top: 10px; right: 10px;">
   {% if messages %}
   {% for message in messages %}
     <div class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true" style='background-color: var(--{{ message.tags }});'>

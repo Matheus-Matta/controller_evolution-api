@@ -1,30 +1,5 @@
 import  {new_toast , loadSpinner}  from './element.js';
 
-// Função de filtro de pesquisa
-document.querySelector('#search-bar').addEventListener('input', function() {
-    const query = this.value
-    const newUrl = new URL(window.location.href);
-    if (query.trim()) {
-        newUrl.searchParams.set('query', query);
-    } else {
-        newUrl.searchParams.delete('query');
-    }
-    window.history.pushState({}, '', newUrl);
-    fetch("contact/filter-contacts?query=" + encodeURIComponent(query))
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                document.getElementById('contact-list').innerHTML = data.list_contact;
-            } else {
-                new_toast(data.message,"error");
-            }
-        })
-        .catch(error => {
-            console.error('Erro na requisição:', error);
-            new_toast('Ocorreu um erro ao buscar os contatos. Tente novamente mais tarde.',"error");
-        });
-});
-
 // Função para excluir contatos
 document.querySelector('.btn-del-tag').addEventListener('click', function() {
     const selectedContacts = [];
