@@ -60,7 +60,6 @@ def create_instancia(request):
 def instance_detail(request, id):
     if request.method == 'GET':
         try:
-            print(id)
             instance = Instance.objects.get(user=request.user,id=id)
             if instance:
                 return render(request, 'instance_detail.html', {'user': request.user, 'instance': instance})
@@ -75,11 +74,14 @@ def delete_instance(request):
     if request.method == 'POST':
         id = request.POST.get('id')
         instance =  Instance.objects.get(user=request.user, id=id)
-        instance_logout(instance)
+        response = instance_logout(instance)
+        print(response)
+        if response.status_code != 200:
+            instance.delete()
         response = instance_delete(instance)
         if response.status_code == 200:
-            instance.delete()
             messages.success(request, 'Sua instancia foi excluida')
+            instance.delete()
         else:
             messages.error(request, 'Error ao tentar excluir a instancia')
     return redirect('user_login')

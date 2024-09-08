@@ -18,40 +18,7 @@ from channels.layers import get_channel_layer
 @login_required
 def contact(request):
     if request.method == 'GET':
-        # Obtém a consulta de pesquisa e a tag da URL
-        tag_name = request.GET.get('tag')
-        contact_name = request.GET.get('name')
-        contacts = Contact.objects.filter(user=request.user)
-
-        # Filtra por tag, se fornecido
-        if tag_name:
-            tag = Tag.objects.filter(user=request.user, name__icontains=tag_name).first()
-            if tag:
-                contacts = contacts.filter(tags=tag)
-
-        # Filtra por nome, se fornecido
-        if contact_name:
-            contacts = contacts.filter(name__icontains=contact_name)
-
-        # Configuração da paginação
-        paginator = Paginator(contacts, 100)  # Mostra 100 contatos por página
-        page_number = request.GET.get('page')  # Obtém o número da página da URL
-        page_obj = paginator.get_page(page_number) # Obtém os contatos da página atual
-
-        # Total de contatos
-        total_contacts = contacts.count()
-        # Obtém as tags do usuário
-        tags = Tag.objects.filter(user=request.user).distinct()
-        
-        context = { 
-                'contacts': page_obj.object_list,  # Contatos da página atual
-                'page_obj': page_obj,              # Objeto da página para controle no template
-                'tags': tags,                      # Tags do usuário
-                'total_contacts': total_contacts,  # Quantidade total de contatos
-                'tag_name': tag_name if tag_name else False,
-                'name': contact_name if contact_name else False,
-                'filter': True if tag_name or contact_name else False
-        }
+        context = get_contacts(request)
         return render(request, 'contacts.html', context)
     return redirect('user_login')
 
@@ -103,28 +70,6 @@ def update_contact(request):
             JsonResponse({'status': 'Error'}, status=400)
 
     return JsonResponse({'status': 'success'}, status=200)
-
-def filter_contact_by_name(request):
-    if request.method == 'GET':
-        try:
-            query = request.GET.get('query')
-            if query:
-                contacts = Contact.objects.filter(name__icontains=query,user=request.user)
-            else:
-                contacts = Contact.objects.filter(user=request.user)
-
-            paginator = Paginator(contacts, 100)  # Mostra 100 contatos por página
-            page_number = request.GET.get('page')  # Obtém o número da página da URL
-            page_obj = paginator.get_page(page_number)  # Obtém os contatos da página atual
-            total_contacts = contacts.count()
-            # Obtém as tags do usuário
-            tags = Tag.objects.filter(user=request.user).distinct()
-
-            
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return redirect('user_login')
-    
 
 @login_required
 def delete_contacts(request):

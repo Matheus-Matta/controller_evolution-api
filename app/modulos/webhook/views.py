@@ -5,7 +5,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from app.modulos.instance.models import Instance
 from app.modulos.contact.utils import create_contact
-from celery import shared_task
+
 
 @csrf_exempt
 def webhook_view(request):
@@ -24,7 +24,7 @@ def webhook_view(request):
                     except Instance.DoesNotExist:
                         print(f"Instância com apikey {apikey} não encontrada.")
 
-            if event.get('event') == 'contacts.upsert':
+            if event.get('event') == 'contacts.upsert' or event.get('event') == "contacts.update":
                 number = event.get('sender')
                 try:
                     instance = Instance.objects.get(token=apikey)
@@ -36,20 +36,9 @@ def webhook_view(request):
                             create_contact(instance, instance.user, name, number, [f'whatsapp_{instance.public_name}'])
                        
                 except Instance.DoesNotExist:
-                    print(f"Instância com apikey {apikey} não encontrada.")
-
-            if event.get('event') == "contacts.update":
-                try:
-                    instance = Instance.objects.get(token=apikey)
-                    contacts = event.get('data', [])
-                    for contact in contacts:
-                        number = contact.get('id').replace('@s.whatsapp.net', '')
-                        name = contact.get('pushName')
-                        if name and number:
-                            create_contact(instance, instance.user, name, number, [f'whatsapp_{instance.name}'])
-                except Instance.DoesNotExist:
-                    print(f"Instância com apikey {apikey} não encontrada.")
-                
+                    print(f"Instância com apikey {apikey} não encontrada.")  
+                except Exception as e:
+                    print(f'[webhook] {str(e)}')      
            
             try:
                 instance = Instance.objects.get(token=apikey)

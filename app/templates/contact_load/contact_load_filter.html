@@ -9,12 +9,14 @@
                         <span class="badge badge-secondary rounded-pill p-2"><p class="m-0">{{ tag_name }}</p></span>
                     </div>
                 </td>
+                {% if not campaign %}
                 <td>
                     <div class="edit-contact">
                         <i class="bi bi-pencil-square text-white edit-button"></i>
                         <i class="bi bi-check-circle-fill text-white confirm-edit d-none"></i>
                     </div>
                 </td>
+                {% endif %}
         </tr>
     {% endfor %}
 </tbody>

@@ -8,5 +8,4 @@ urlpatterns = [
     path('contact/update',views.update_contact,name="update_contact"),
     path('contact/delete',views.delete_contacts,name='delete_contacts'),
     path("contact/import",views.import_contact,name='import_contact'),
-    path('contact/filter-contacts',views.filter_contact_by_name, name='filter_contact_by_name'),
 ]

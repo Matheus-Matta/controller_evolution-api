@@ -25,9 +25,14 @@ app.conf.task_queues = {
     'webhook': {
         'exchange': 'webhook',
         'routing_key': 'webhook',
+    },
+    'messages': {
+        'exchange': 'messages',
+        'routing_key': 'messages',
     }
 }
 
 app.conf.task_routes = {
     'app.modulos.contact.tasks.webhookSend': {'queue': 'webhook'},
+    'app.modulos.campaign.tasks.send_msg_task': {'queue': 'messages'},
 }

@@ -1,0 +1,169 @@
+{% load static crispy_forms_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Contacts</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/contacts.css' %}">
+</head>
+<body>
+    {% include 'header.html' %}
+    <div class="container-fluid">
+        <div class="row">
+            {% include 'sidebar.html' %} 
+                <div class="col-md-2 content pl-2 conteiner-campaign">
+                    <h2 style="font-size: 1vw;" class="mt-4">Iniciar Nova Campanha</h2>
+                    <!-- Início do formulário de campanha -->
+                    <form method="POST" action="{% url 'campaign' %}" class="mt-4">
+                        {% csrf_token %}
+                        <!-- Nome da campanha -->
+                        <div class="form-group">
+                            {{ form.name|as_crispy_field }}  <!-- Renderiza o campo com estilo Bootstrap -->
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+            
+                        <!-- Números de envio -->
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                {{ form.start_number|as_crispy_field }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.start_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="form-group col-md-6">
+                                {{ form.end_number|as_crispy_field }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.end_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+            
+                        <!-- Timeout -->
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <p style="font-size: 0.5vw;" class="text-danger p-0 m-0">Em segundos</p>
+                                {{ form.start_timeout|as_crispy_field }}
+                                <div style="font-size: 0.5vw;" class="invalid-feedback">
+                                    {% for error in form.start_timeout.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <p style="font-size: 0.5vw;" class="text-danger p-0 m-0">Em segundos</p>
+                                {{ form.end_timeout|as_crispy_field }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.end_timeout.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pausas entre mensagens -->
+                        <div class="form-check mb-3 p-0 check_box">
+                            {{ form.enable_pause|as_crispy_field }}
+                        </div>
+
+                        <!-- Campos de pausa (inicialmente ocultos) -->
+                        <div class="pause-fields">
+                            <p style="font-size: 0.7vw;" class="text-danger p-0 m-0 pause-field">Todos Em Minutos</p>
+                            <div class="form-row">
+                                <div class="form-group col-md-4 pause-field">
+                                    {{ form.min_pause|as_crispy_field }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.min_pause.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="form-group col-md-4 pause-field">
+                                    {{ form.max_pause|as_crispy_field }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.max_pause.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="form-group col-md-4 pause-field">
+                                    {{ form.pause_quantity|as_crispy_field }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.pause_quantity.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Saudação --> 
+                        <div class="form-check mb-3 p-0 check_box">
+                            {{ form.send_greeting|as_crispy_field }}
+                            <div class="invalid-feedback">
+                                {% for error in form.send_greeting.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+            
+                        <!-- Instância -->
+                        <div class="form-group">
+                            {{ form.instance|as_crispy_field }}
+                            <div class="invalid-feedback">
+                                {% for error in form.instance.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if tag_name %}<input type="hidden" value="{{tag_name}}" name="tag_name">{% endif %}
+                        {% if name %}<input type="hidden" value="{{name}}" name="contact_name">{% endif %}
+                        <!-- Botão de submissão -->
+                        <button type="submit" class="btn btn-success">Iniciar Campanha</button>
+                    </form>  
+                    <!-- Fim do formulário de campanha -->
+                </div>
+                <div class="col-md-8 content pl-2 display-h" id="contact-list">
+                    {% include 'list_contacts.html' %}
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    
+    
+</div>
+    <script>
+        // Função para exibir ou ocultar os campos de pausa
+        function togglePauseFields() {
+            const enablePause = document.getElementById('id_enable_pause');
+            const pauseFields = document.querySelectorAll('.pause-field');
+            pauseFields.forEach(field => {
+                field.style.display = enablePause.checked ? 'block' : 'none';
+            });
+        }
+
+        // Adiciona evento ao checkbox de pausa
+        document.addEventListener('DOMContentLoaded', function () {
+            const enablePause = document.getElementById('id_enable_pause');
+            togglePauseFields();  // Exibe ou oculta os campos no carregamento da página
+
+            enablePause.addEventListener('change', togglePauseFields);  // Adiciona o listener para mudar os campos de pausa
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script type="module" src="{% static 'js/contact/nav_tag_contact.js' %}"></script>
+</html>

@@ -3,5 +3,5 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path('campanha', views.campanha, name='campanha'),
+    path('campaign', views.campaign, name='campaign'),
 ]

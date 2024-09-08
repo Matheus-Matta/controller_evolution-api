@@ -4,7 +4,7 @@ from django.conf import settings
 def setWebwook(instance_name, instance_token):
     response = requests.post(f"https://api.star.dev.br/webhook/set/{instance_name}",
                     json={
-                        "url": f"{settings.BASE_URL}/webhook",
+                        "url": f"{settings.BASE_URL}/webhook/",
                         "webhook_by_events": False,
                         "events": [
                             "APPLICATION_STARTUP","QRCODE_UPDATED","MESSAGES_SET",

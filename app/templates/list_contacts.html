@@ -11,13 +11,15 @@
             <span style="font-size: 0.8vw;" class="badge badge-success d-none qtd-ckeck ml-2">0</span>
         </div>
         <div class="d-flex align-items-center ">
-            <a href="{% url 'campanha' %}?{% if tag_name %}tag={{ tag_name }}{% endif %}{% if name %}&name={{ name }}{% endif %}">
+            {% if not campaign %}
+            <a href="{% url 'campaign' %}?{% if tag_name %}tag={{ tag_name }}{% endif %}{% if name %}&name={{ name }}{% endif %}">
                 <button style="background-color: var(--purple); font-weight: 500; letter-spacing: 1px;" class="btn text-white mr-2">Campanha</button>
             </a>
             <button style="font-weight: 600;" class="btn btn-outline-success mr-4" data-toggle="modal" data-target="#addContactModal">
                 <i class="bi bi-plus-square"></i>
                 Contato
             </button>
+            {% endif %}
             {% include 'contact_load/partials/nav_pagination.html' %} 
         </div>
     </div>
@@ -37,8 +39,7 @@
                     <th class="pl-2 contact-name col-md-5">Nome<i class="bi bi-people ml-2"></i></th>
                     <th class="pl-2 contact-number col-md-3">Numero<i class="bi bi-telephone-inbound ml-2"></i></th>
                     <th class="pl-2 col-md-3" style="text-align: center;">Tags<i class="bi bi-tags ml-2"></i></th>
-                    <th class="pl-2"></th>
-                </tr>
+                    {% if not campaign %}<th class="pl-2"></th></tr>{% endif %}
             </thead>
                 {% if filter %}
                     {% include 'contact_load/contact_load_filter.html' %}

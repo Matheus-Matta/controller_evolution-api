@@ -61,4 +61,19 @@ body{
    justify-content: end;
    z-index: 1050;
 }
-
+.check_box input[type="checkbox"]{
+    transform: scale(1.2);
+}
+.asteriskField {
+    display: none !important;
+}
+.conteiner-campaign form label{
+    text-wrap: nowrap;
+    font-size: 0.8vw !important;
+}
+.conteiner-campaign .form-group{
+    margin-bottom: 4px !important;
+}
+.conteiner-campaign .pause-field {
+    display: none;
+}

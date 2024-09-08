@@ -44,13 +44,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "crispy_forms",
+    "crispy_bootstrap5",
     'app',
     'app.modulos.login',
     'app.modulos.instance',
     'app.modulos.webhook',
     'app.modulos.contact',
     'app.modulos.tags',
-    'app.modulos.campanha',
+    'app.modulos.campaign',
 
 ]
 
@@ -186,3 +188,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
+ 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5" # Definir os templates permitidos
+CRISPY_TEMPLATE_PACK = "bootstrap5" # Definir o template padrão para Bootstrap 5

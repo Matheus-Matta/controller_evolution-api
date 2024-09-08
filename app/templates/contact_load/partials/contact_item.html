@@ -33,10 +33,12 @@
         <i class="bi bi-caret-right-fill" style="cursor: pointer; opacity: 0;"></i>
         {% endif %}
     </td>
+    {% if not campaign %}
     <td>
         <div class="edit-contact">
             <i class="bi bi-pencil-square text-white edit-button"></i>
             <i class="bi bi-check-circle-fill text-white confirm-edit d-none"></i>
         </div>
     </td>
+    {% endif %}
 </tr>
