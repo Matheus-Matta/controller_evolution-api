@@ -4,7 +4,7 @@ services:
   control:
     build: .
     command: >
-      sh -c "mkdir -p /app/static /app/staticfiles && python manage.py collectstatic --noinput && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:3344"
+      sh -c "mkdir -p /app/static /app/staticfiles && python manage.py collectstatic --noinput && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8888"
     volumes:
       - .:/app
     ports:
