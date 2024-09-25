@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Campanha - Análise</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .progress-wrapper {
+            margin: 30px 0;
+        }
+        .progress-bar {
+            height: 30px;
+            background-color: #68a9ef;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .dashboard-content {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <div class="container-fluid">
+        <div class="row">
+            {% include 'sidebar.html' %}
+
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+                <div class="dashboard-header">
+                    <h2>Análise da Campanha</h2>
+                    <!-- Botão para encerrar a campanha -->
+                    <form method="POST" action="{% url 'encerrar_campaign' campaign.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="task_id" value="{{ campaign.task_id }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-stop-circle"></i> Encerrar Campanha
+                        </button>
+                    </form>
+                </div>
+
+                <div class="dashboard-content">
+                    <!-- Informações sobre a campanha -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Status da Campanha:</h5>
+                            <p>Sucessos: {{ campaign.send_success }}</p>
+                            <p>Erros: {{ campaign.send_erro }}</p>
+                            <p>Total: {{ campaign.total_numbers }}</p>
+                            <p>Data de início: {{ campaign.start_date }}</p>
+                            <p>Data de término: {{ campaign.end_time }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Barra de progresso -->
+                    <div class="progress-wrapper">
+                        <div id="progress-bar" class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" id="progress-bar-status"></div>
+                        </div>
+                        <p id="progress-bar-message" class="mt-2">Aguardando progresso...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Celery Progress Script -->
+    <script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+    <script>
+        var progressUrl = "{% url 'celery_progress:task_status' task_id %}";
+        CeleryProgressBar.initProgressBar(progressUrl, {
+            onSuccess: function(progress) {
+                document.getElementById('progress-bar-message').innerText = 'Campanha concluída!';
+            },
+            onError: function(progress) {
+                document.getElementById('progress-bar-message').innerText = 'Erro ao processar a campanha.';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from decouple import config
+from kombu import Exchange, Queue
 
 BASE_URL = 'http://10.0.0.37:8000'
 
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
     'app.modulos.contact',
     'app.modulos.tags',
     'app.modulos.campaign',
+    'celery_progress',
 
 ]
 
@@ -183,11 +185,17 @@ LOGIN_URL = 'user_login'
 
 # configurações do Celery
 CELERY_BROKER_URL = config("REDIS_URL")
+CELERY_RESULT_BACKEND = config("REDIS_URL")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
+CELERY_QUEUES = (
+    Queue('default', Exchange('default'), routing_key='default'),
+    Queue('high_priority', Exchange('high_priority'), routing_key='high'),
+    Queue('low_priority', Exchange('low_priority'), routing_key='low'),
+)
  
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5" # Definir os templates permitidos
 CRISPY_TEMPLATE_PACK = "bootstrap5" # Definir o template padrão para Bootstrap 5

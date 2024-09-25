@@ -67,11 +67,12 @@ class CampaignForm(forms.ModelForm):
         required=False
     )
 
-    # Campo de seleção para instâncias que pertencem ao usuário
-    instance = forms.ModelChoiceField(
-        queryset=Instance.objects.none(),  # Será filtrado no __init__
-        label="Escolha a instância",
-        required=True
+
+    instance = forms.ModelMultipleChoiceField(
+            queryset=Instance.objects.none(),  # Será filtrado no __init__
+            label="Escolha as instâncias",
+            widget=forms.CheckboxSelectMultiple,  # Usar checkboxes em vez de múltipla seleção
+            required=True
     )
 
     class Meta:

@@ -28,6 +28,7 @@ def get_contacts(request):
     tag_name = request.GET.get('tag')
     contact_name = request.GET.get('name')
     contacts = Contact.objects.filter(user=request.user)
+    
     # Filtra por tag, se fornecido
     if tag_name:
         tag = Tag.objects.filter(user=request.user, name__icontains=tag_name).first()
