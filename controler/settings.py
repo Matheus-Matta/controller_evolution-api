@@ -14,7 +14,8 @@ from pathlib import Path
 from decouple import config
 from kombu import Exchange, Queue
 
-BASE_URL = 'http://10.0.0.37:8000'
+PORT=config("PORT", default=3000)
+BASE_URL = config('DOMAIN', default=f'http://10.0.0.37:{PORT}')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,9 +30,9 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [config('DOMAIN', default=f'http://localhost:{PORT}')]
 CSRF_TRUSTED_ORIGINS = [
-    BASE_URL, 'http://localhost:8000'
+    BASE_URL, f'http://localhost:{PORT}'
 ]
 
 
@@ -108,25 +109,26 @@ WSGI_APPLICATION = 'controler.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# Configuração para SQLite como padrão
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
-# por motivos de segurança não coloquei os dados corretos do banco de dados
-# na versao oficial que será implatada vai ter os dados corretos
-DATABASES_EXAMPLE = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'impacto_db',
-        'USER': 'user-prosgres',
-        'PASSWORD': 'senha-prosgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
+# Verifica se o PostgreSQL está configurado no .env
+if config('DB_NAME', default=None):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DATABASE_NAME'),
+            'USER': config('DATABASE_USER'),
+            'PASSWORD': config('DATABASE_PASSWORD'),
+            'HOST': config('DATABASE_HOST'),
+            'PORT': config('DATABASE_PORT', default='5432'),
+        }
     }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

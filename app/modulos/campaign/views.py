@@ -115,15 +115,18 @@ def encerrar_campaign(request, campaign_id):
      if request.method == "POST":
           try:
                campaign = Campaign.objects.get(id=campaign_id)
-               campaign.end_time = timezone.now()
-               campaign.save()
-               task_id = campaign.id_progress
-                            
-               # Cancela a task no Celery
-               result = AsyncResult(task_id)
-               result.revoke(terminate=True)
-
-               messages.success(request, "Campanha encerrada com sucesso.")
+               if campaign.status != 'finalizado':
+                    campaign.end_date = timezone.now()
+                    campaign.status = 'finalizado'
+                    campaign.save()
+                    task_id = campaign.id_progress
+                              
+                    # Cancela a task no Celery
+                    result = AsyncResult(task_id)
+                    result.revoke(terminate=True)
+                    messages.success(request, "Campanha encerrada com sucesso.")
+               else:
+                    messages.error(request, "Campanha ja encerrada.")
           except Campaign.DoesNotExist:
                messages.error(request, "Campanha não encontrada.")
           except Exception as e:

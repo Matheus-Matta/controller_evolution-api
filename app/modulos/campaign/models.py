@@ -13,7 +13,6 @@ class Campaign(models.Model):
     send_erro = models.IntegerField(default=0)  # Quantidade de erros  # Quantidade de números já enviados
     start_date = models.DateTimeField()  # Data de início da campanha
     end_date = models.DateTimeField(null=True, blank=True)  # Data de término da campanha
-    end_time = models.DateTimeField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Usuário que criou a campanha
     start_timeout = models.IntegerField()  # Tempo de início do sorteio do timeout em segundos
     end_timeout = models.IntegerField()  # Tempo final do sorteio do timeout em segundos

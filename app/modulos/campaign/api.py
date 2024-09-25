@@ -2,6 +2,8 @@ from rest_framework.decorators import api_view
 from .models import Campaign , SendMensagem
 from django.http import JsonResponse
 from django.core import serializers
+from django.utils import timezone
+from celery.result import AsyncResult
 
 @api_view(['GET'])
 def list_campaign(request):
@@ -22,3 +24,28 @@ def campaign_details(request, campaign_id):
     except Exception as e:
         return JsonResponse({ 'error': str(e) }, status=500)
 
+
+@api_view(['POST'])
+def campaign_encerrar(request, campaign_id):
+    if request.method == "POST":
+            try:
+                campaign = Campaign.objects.get(id=campaign_id)
+                if campaign.status != 'finalizado':
+                    campaign.end_date = timezone.now()
+                    campaign.status = 'finalizado'
+                    campaign.save()
+                    task_id = campaign.id_progress
+                              
+                    # Cancela a task no Celery
+                    result = AsyncResult(task_id)
+                    result.revoke(terminate=True)
+                    return JsonResponse({"success": "Campanha encerrada com sucesso."}, status=201)
+                else:
+                   return JsonResponse({"error": "Campanha ja encerrada."}, status= 200)
+            except Campaign.DoesNotExist:
+                    return JsonResponse({"error": "Campanha não encontrada"}, status=401)
+
+            except Exception as e:
+                    return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
+
+    

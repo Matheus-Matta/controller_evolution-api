@@ -1,7 +1,7 @@
 
 from django.urls import path, include
 from . import views
-from .api import list_campaign, campaign_details
+from .api import list_campaign, campaign_details,campaign_encerrar
 
 urlpatterns = [
     path('campaign', views.campaign, name='campaign'),
@@ -10,5 +10,6 @@ urlpatterns = [
 
     path('api/campaigns', list_campaign, name='list_campaign'),
     path('api/campaigns/<int:campaign_id>', campaign_details, name='campaign_details'),
-
+    path('api/campaigns/exit/<int:campaign_id>', campaign_encerrar, name='campaign_encerrar'),
+  
 ]

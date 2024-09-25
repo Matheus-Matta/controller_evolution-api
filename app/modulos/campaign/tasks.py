@@ -105,11 +105,11 @@ def process_campaign_contacts(self, campaign_id, tag_name, contact_name):
             progress_recorder.set_progress(contacts_sent, campaign.total_numbers, description=f"Enviando para {contact.name or 'Colaborador'}")
 
         total_minutes = total_milliseconds // 60000
-        end_time = timezone.now() + timezone.timedelta(minutes=total_minutes)
-        campaign.end_time = end_time
+        campaign.end_date = timezone.now()
+        campaign.status = 'finalizado'
         campaign.save()
 
-        print(f"Disparo iniciado. Tempo total: {total_minutes // 60} horas e {total_minutes % 60} minutos")
+        print(f"Disparo finalizado. Tempo total: {total_minutes // 60} horas e {total_minutes % 60} minutos")
 
         return {'success': True, 'task_id': self.request.id, 'progress': 100}
 
