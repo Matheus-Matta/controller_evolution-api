@@ -30,8 +30,8 @@ def create_instancia(request):
                         qrcode_image = instance_data['qrcode']['base64']
 
                         web_response = setWebwook(instance.name, instance.token)
-                        if web_response.status_code == 200:
-                            print(f'[{request.user}] Set webhook success -> {instance.name.replace(request.user,'')}')
+                        if web_response.status_code != 200:
+                            messages.error(request, 'Houve um error ao conectar webhook a instacia')
                         instances = Instance.objects.filter(user=request.user)
                         messages.success(request, 'Instancia Criada com sucesso!')
                         return render(request, 'home.html', {
