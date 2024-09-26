@@ -144,7 +144,7 @@ def enviar_mensagem_whatsapp(instance, numero, nome, i):
         'apikey': instance.token,
     }
     payload = {
-        "number": '5521981345727',
+        "number": numero,
         "options": {
             "delay": 2300,
             "presence": "composing",
