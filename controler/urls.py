@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path(r'^celery-progress/', include('celery_progress.urls')),
+    path('celery-progress/', include('celery_progress.urls')),
     path('', include('app.modulos.webhook.urls')),
     path('', include('app.modulos.login.urls')),
     path('', include('app.modulos.instance.urls')),
