@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.core import serializers
 from django.utils import timezone
 from celery.result import AsyncResult
+from app.modulos.instance.models import Instance
 
 @api_view(['GET'])
 def list_campaign(request):
@@ -32,7 +33,7 @@ def campaign_encerrar(request, campaign_id):
                 campaign = Campaign.objects.get(id=campaign_id)
                 if campaign.status != 'finalizado':
                     campaign.end_date = timezone.now()
-                    campaign.status = 'finalizado'
+                    campaign.status = 'cancelado'
                     campaign.save()
                     task_id = campaign.id_progress
                               
@@ -48,4 +49,45 @@ def campaign_encerrar(request, campaign_id):
             except Exception as e:
                     return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
 
+@api_view(['GET'])
+def campaign_add_response(request, instance_name):
+    if request.method == "GET":
+            try:
+                instance = Instance.objects.get(name=instance_name)
+                campaigns = Campaign.objects.filter(instance=instance)
+            
+                # Iterar sobre as campanhas e atualizar a resposta
+                for campaign in campaigns:
+                    if campaign.status == "processando":
+                        campaign.responses += 1
+                        campaign.save()
+                    else:
+                        return JsonResponse({"error": "Campanha atualizada"}, status=201)
+                    # Retorna sucesso após atualizar todas as campanhas
+                return JsonResponse({"success": "Resposta atualizada para todas as campanhas."}, status=201)
+            except Campaign.DoesNotExist:
+                    return JsonResponse({"error": "Campanha não encontrada"}, status=401)
+
+            except Exception as e:
+                    return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
     
+
+@api_view(['POST'])
+def campaign_delete(request, campaign_id):
+    if request.method == "POST":
+            try:
+                campaign = Campaign.objects.get(id=campaign_id)
+                task_id = campaign.id_progress
+                              
+                result = AsyncResult(task_id)
+                result.revoke(terminate=True)
+
+                campaign.delete()
+
+                return JsonResponse({"success": "Campanha deleta com sucesso."}, status=201)
+            
+            except Campaign.DoesNotExist:
+                    return JsonResponse({"error": "Campanha não encontrada"}, status=401)
+
+            except Exception as e:
+                    return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)

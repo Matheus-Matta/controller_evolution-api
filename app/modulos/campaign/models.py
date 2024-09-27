@@ -19,7 +19,8 @@ class Campaign(models.Model):
     send_greeting = models.BooleanField(default=False)  # Mensagem de saudação (boolean)
     id_progress = models.CharField(max_length=200)  # ID do progresso da tarefa no celery-progress
     instance = models.ManyToManyField(Instance)  # Instância
-
+    responses = models.IntegerField(default=0)
+    
     # Campos de configuração de envio
     start_number = models.IntegerField()  # Número inicial para envio
     end_number = models.IntegerField()  # Número final para envio
