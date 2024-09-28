@@ -12,8 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 @api_view(['GET'])
-@method_decorator(csrf_exempt, name='dispatch')
-@csrf_exempt
 def list_campaign(request):
     try:
         # Filtra as campanhas que estão ativas (ou de acordo com o status)
@@ -23,8 +21,6 @@ def list_campaign(request):
         return JsonResponse({ 'error': str(e) }, status=500)
 
 @api_view(['GET'])
-@method_decorator(csrf_exempt, name='dispatch')
-@csrf_exempt
 def campaign_details(request, campaign_id):
     try:
         # Filtra as campanhas que estão ativas (ou de acordo com o status)
@@ -36,8 +32,6 @@ def campaign_details(request, campaign_id):
 
 
 @api_view(['POST'])
-@method_decorator(csrf_exempt, name='dispatch')
-@csrf_exempt
 def campaign_encerrar(request, campaign_id):
     if request.method == "POST":
             try:
@@ -61,8 +55,6 @@ def campaign_encerrar(request, campaign_id):
                     return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
 
 @api_view(['GET'])
-@method_decorator(csrf_exempt, name='dispatch')
-@csrf_exempt
 def campaign_add_response(request, instance_name):
     if request.method == "GET":
             try:
@@ -86,8 +78,6 @@ def campaign_add_response(request, instance_name):
     
 
 @api_view(['POST'])
-@method_decorator(csrf_exempt, name='dispatch')
-@csrf_exempt
 def campaign_delete(request, campaign_id):
     if request.method == "POST":
             try:
@@ -108,9 +98,7 @@ def campaign_delete(request, campaign_id):
                     return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
 
 @api_view(['GET'])
-@method_decorator(csrf_exempt, name='dispatch')
-@csrf_exempt
-def campaign_progress(request, task_id):
+def api_campaign_progress(request, task_id):
     if request.method == "GET":
         try:
             # Obtém o resultado da task do Celery pelo ID da tarefa

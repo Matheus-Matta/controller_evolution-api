@@ -13,5 +13,5 @@ urlpatterns = [
     path('api/campaigns/exit/<int:campaign_id>', campaign_encerrar, name='campaign_encerrar'),
     path('api/campaigns/add/<str:instance_name>', campaign_add_response, name='campaign_add_response'),
     path('api/campaigns/del/<int:campaign_id>', campaign_delete, name='campaign_delete'),
-    path('api/campaigns/progress/<str:task_id>', campaign_progress, name='campaign_progress'),
+    path('api/campaigns/progress/<str:task_id>', api_campaign_progress, name='api_campaign_progress'),
 ]
