@@ -117,7 +117,7 @@ def encerrar_campaign(request, campaign_id):
                campaign = Campaign.objects.get(id=campaign_id)
                if campaign.status != 'finalizado':
                     campaign.end_date = timezone.now()
-                    campaign.status = 'finalizado'
+                    campaign.status = 'cancelado'
                     campaign.save()
                     task_id = campaign.id_progress
                               
