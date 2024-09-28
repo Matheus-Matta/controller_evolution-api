@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'app.modulos.tags',
     'app.modulos.campaign',
     'celery_progress',
+    'corsheaders',
 
 ]
 
@@ -84,7 +85,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'controler.urls'
 

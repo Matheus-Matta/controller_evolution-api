@@ -5,8 +5,15 @@ from django.core import serializers
 from django.utils import timezone
 from celery.result import AsyncResult
 from app.modulos.instance.models import Instance
+from celery_progress.backend import Progress
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
 
 @api_view(['GET'])
+@method_decorator(csrf_exempt, name='dispatch')
+@csrf_exempt
 def list_campaign(request):
     try:
         # Filtra as campanhas que estão ativas (ou de acordo com o status)
@@ -16,6 +23,8 @@ def list_campaign(request):
         return JsonResponse({ 'error': str(e) }, status=500)
 
 @api_view(['GET'])
+@method_decorator(csrf_exempt, name='dispatch')
+@csrf_exempt
 def campaign_details(request, campaign_id):
     try:
         # Filtra as campanhas que estão ativas (ou de acordo com o status)
@@ -27,6 +36,8 @@ def campaign_details(request, campaign_id):
 
 
 @api_view(['POST'])
+@method_decorator(csrf_exempt, name='dispatch')
+@csrf_exempt
 def campaign_encerrar(request, campaign_id):
     if request.method == "POST":
             try:
@@ -50,6 +61,8 @@ def campaign_encerrar(request, campaign_id):
                     return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
 
 @api_view(['GET'])
+@method_decorator(csrf_exempt, name='dispatch')
+@csrf_exempt
 def campaign_add_response(request, instance_name):
     if request.method == "GET":
             try:
@@ -73,6 +86,8 @@ def campaign_add_response(request, instance_name):
     
 
 @api_view(['POST'])
+@method_decorator(csrf_exempt, name='dispatch')
+@csrf_exempt
 def campaign_delete(request, campaign_id):
     if request.method == "POST":
             try:
@@ -91,3 +106,31 @@ def campaign_delete(request, campaign_id):
 
             except Exception as e:
                     return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
+
+@api_view(['GET'])
+@method_decorator(csrf_exempt, name='dispatch')
+@csrf_exempt
+def campaign_progress(request, task_id):
+    if request.method == "GET":
+        try:
+            # Obtém o resultado da task do Celery pelo ID da tarefa
+            result = AsyncResult(task_id)
+
+            # Verifica o progresso da tarefa
+            progress = Progress(result)
+            progress_data = progress.get_info()  # Obtém dados como estado e porcentagem
+
+            # Retorna a resposta JSON com o progresso da tarefa
+            print(progress_data)
+            return JsonResponse({
+                'state': progress_data['state'],
+                'progress': {
+                    'current': progress_data['progress']['current'],
+                    'total': progress_data['progress']['total'],
+                    'percent': progress_data['progress']['percent'],
+                }
+            }, status=200)
+
+        except Exception as e:
+            print(e)
+            return JsonResponse({'error': str(e)}, status=500)            
