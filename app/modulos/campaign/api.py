@@ -9,16 +9,37 @@ from celery_progress.backend import Progress
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-
+from datetime import datetime
+from django.core.serializers import serialize
 
 @api_view(['GET'])
 def list_campaign(request):
     try:
-        # Filtra as campanhas que estão ativas (ou de acordo com o status)
-        campaigns = serializers.serialize('json', Campaign.objects.all())
-        return JsonResponse({ 'campaigns': campaigns }, status=200)
+        # Obtém os parâmetros de data da query string
+        data_inicio = request.GET.get('dataInicio')
+        data_fim = request.GET.get('dataFim')
+
+        # Filtrar as campanhas com base no intervalo de datas
+        campaigns = Campaign.objects.all()
+
+        # Se dataInicio for passada, filtrar campanhas com start_date >= data_inicio
+        if data_inicio:
+            data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d')
+            campaigns = campaigns.filter(start_date__gte=data_inicio_obj)
+
+        # Se dataFim for passada, filtrar campanhas com start_date <= data_fim
+        if data_fim:
+            data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d')
+            campaigns = campaigns.filter(start_date__lte=data_fim_obj)
+
+        # Serializar os dados filtrados
+        campaigns_serialized = serialize('json', campaigns)
+
+        return JsonResponse({ 'campaigns': campaigns_serialized }, status=200)
+
     except Exception as e:
         return JsonResponse({ 'error': str(e) }, status=500)
+    
 
 @api_view(['GET'])
 def campaign_details(request, campaign_id):
