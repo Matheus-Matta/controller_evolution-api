@@ -31,7 +31,7 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [config('DOMAIN', default=f'http://localhost:{PORT}'), '186.216.60.62:3344']
+ALLOWED_HOSTS = [config('DOMAIN', default=f'http://localhost:{PORT}'), '186.216.60.62']
 CSRF_TRUSTED_ORIGINS = [
     BASE_URL, f'http://localhost:{PORT}', 'http://186.216.60.62:3344'
 ]
