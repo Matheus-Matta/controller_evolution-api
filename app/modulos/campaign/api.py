@@ -19,8 +19,8 @@ def list_campaign(request):
         data_inicio = request.GET.get('dataInicio')
         data_fim = request.GET.get('dataFim')
 
-        # Filtrar as campanhas com base no intervalo de datas
-        campaigns = Campaign.objects.all()
+        # Filtrar as campanhas com base no intervalo de datas e ordenar por id decrescente
+        campaigns = Campaign.objects.all().order_by('-id')
 
         # Se dataInicio for passada, filtrar campanhas com start_date >= data_inicio
         if data_inicio:
@@ -32,7 +32,7 @@ def list_campaign(request):
             data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d')
             campaigns = campaigns.filter(start_date__lte=data_fim_obj)
 
-        # Serializar os dados filtrados
+        # Serializar os dados filtrados e ordenados
         campaigns_serialized = serialize('json', campaigns)
 
         return JsonResponse({ 'campaigns': campaigns_serialized }, status=200)
