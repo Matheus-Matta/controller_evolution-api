@@ -169,7 +169,8 @@ def enviar_mensagem_whatsapp(instance, numero, nome, i):
         # Tenta capturar o código de status e a mensagem da resposta, se existir
         if e.response is not None:
             code = e.response.status_code
-            message = f"[instancia] {instance.name} {e.response.text}"   # Captura a mensagem de erro da resposta
+            print(e.response)
+            message = f"[instancia] {instance.name} Error ao enviar mensagem"   # Captura a mensagem de erro da resposta
         else:
             code = 500  # Código genérico caso não exista resposta do servidor
             message = f"[instancia] {instance.name} Error ao enviar mensagem"  # Mensagem padrão da exceção
