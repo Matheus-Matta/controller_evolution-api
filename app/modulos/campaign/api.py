@@ -1,5 +1,5 @@
 from rest_framework.decorators import api_view
-from .models import Campaign , SendMensagem
+from .models import Campaign , SendMensagem, CampaignResponse
 from django.http import JsonResponse
 from django.core import serializers
 from django.utils import timezone
@@ -32,24 +32,43 @@ def list_campaign(request):
             data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d')
             campaigns = campaigns.filter(start_date__lte=data_fim_obj)
 
-        # Serializar os dados filtrados e ordenados
-        campaigns_serialized = serialize('json', campaigns)
+        # Serializar os dados e incluir a contagem de respostas para cada campanha
+        campaigns_data = []
+        for campaign in campaigns:
+            response_count = CampaignResponse.objects.filter(campaign=campaign).count()
+            campaigns_data.append({
+                'id': campaign.id,
+                'name': campaign.name,
+                'total_numbers': campaign.total_numbers,
+                'status': campaign.status,
+                'send_success': campaign.send_success,
+                'send_error': campaign.send_error,
+                'start_date': campaign.start_date,
+                'end_date': campaign.end_date,
+                'response_count': response_count
+            })
 
-        return JsonResponse({ 'campaigns': campaigns_serialized }, status=200)
+        return JsonResponse({'campaigns': campaigns_data}, status=200)
 
     except Exception as e:
-        return JsonResponse({ 'error': str(e) }, status=500)
+        return JsonResponse({'error': str(e)}, status=500)
     
 
 @api_view(['GET'])
 def campaign_details(request, campaign_id):
     try:
-        # Filtra as campanhas que estão ativas (ou de acordo com o status)
-        campaign = serializers.serialize('json', Campaign.objects.filter(id=campaign_id))
-        logs = serializers.serialize('json', SendMensagem.objects.filter(campaign=campaign_id))
-        return JsonResponse({ 'campaign': campaign, 'logs': logs }, status=200)
+        campaign = Campaign.objects.get(id=campaign_id)
+        logs = SendMensagem.objects.filter(campaign=campaign_id)
+        responses = CampaignResponse.objects.filter(campaign=campaign).count()
+        return JsonResponse({
+            'campaign': serializers.serialize('json', [campaign]),  # Serialize a campanha
+            'logs': serializers.serialize('json', logs),  # Serialize os logs
+            'responses': responses,  # Adicionar contagem de respostas
+        }, status=200)
+    except Campaign.DoesNotExist:
+        return JsonResponse({'error': 'Campanha não encontrada'}, status=404)
     except Exception as e:
-        return JsonResponse({ 'error': str(e) }, status=500)
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @api_view(['POST'])
@@ -75,28 +94,35 @@ def campaign_encerrar(request, campaign_id):
             except Exception as e:
                     return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
 
-@api_view(['GET'])
+@api_view(['POST'])
 def campaign_add_response(request, instance_name):
-    if request.method == "GET":
-            try:
-                instance = Instance.objects.get(name=instance_name)
-                campaigns = Campaign.objects.filter(instance=instance)
-            
-                # Iterar sobre as campanhas e atualizar a resposta
-                for campaign in campaigns:
-                    if campaign.status == "processando":
-                        campaign.responses += 1
-                        campaign.save()
-                    else:
-                        return JsonResponse({"error": "Campanha atualizada"}, status=201)
-                    # Retorna sucesso após atualizar todas as campanhas
-                return JsonResponse({"success": "Resposta atualizada para todas as campanhas."}, status=201)
-            except Campaign.DoesNotExist:
-                    return JsonResponse({"error": "Campanha não encontrada"}, status=401)
+    try:
+        instance = Instance.objects.get(name=instance_name)
+        campaign = Campaign.objects.get(instance=instance)
+        number = request.POST.get('number')
 
-            except Exception as e:
-                    return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
-    
+        if campaign.status == "processando":
+            # Verificar se o número já respondeu
+            if not campaign.responses.filter(phone_number=number).exists():
+                # Criar uma nova resposta para a campanha
+                CampaignResponse.objects.create(
+                    campaign=campaign,
+                    phone_number=number
+                )
+                campaign.save()
+            else:
+                return JsonResponse({"error": "Número já respondeu a esta campanha."}, status=400)
+        else:
+            return JsonResponse({"error": "Campanha não está processando."}, status=400)
+
+        return JsonResponse({"success": "Resposta registrada para todas as campanhas ativas."}, status=201)
+
+    except Instance.DoesNotExist:
+        return JsonResponse({"error": "Instância não encontrada"}, status=404)
+    except Campaign.DoesNotExist:
+        return JsonResponse({"error": "Campanha não encontrada"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": f"Erro ao registrar resposta: {str(e)}"}, status=500)
 
 @api_view(['POST'])
 def campaign_delete(request, campaign_id):

@@ -8,9 +8,9 @@ from app.modulos.instance.models import Instance
 class Campaign(models.Model):
     name = models.CharField(max_length=255)  # Nome da campanha
     total_numbers = models.IntegerField(null=True, blank=True)  # Quantidade total de números a serem enviados
-    status = models.CharField(max_length=15, null=True) 
+    status = models.CharField(max_length=15, null=True)
     send_success = models.IntegerField(default=0)  # Quantidade de números já enviados com sucesso
-    send_erro = models.IntegerField(default=0)  # Quantidade de erros  # Quantidade de números já enviados
+    send_error = models.IntegerField(default=0)  # Quantidade de erros
     start_date = models.DateTimeField()  # Data de início da campanha
     end_date = models.DateTimeField(null=True, blank=True)  # Data de término da campanha
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Usuário que criou a campanha
@@ -19,9 +19,6 @@ class Campaign(models.Model):
     send_greeting = models.BooleanField(default=False)  # Mensagem de saudação (boolean)
     id_progress = models.CharField(max_length=200)  # ID do progresso da tarefa no celery-progress
     instance = models.ManyToManyField(Instance)  # Instância
-    responses = models.IntegerField(default=0)
-    
-    # Campos de configuração de envio
     start_number = models.IntegerField()  # Número inicial para envio
     end_number = models.IntegerField()  # Número final para envio
 
@@ -45,9 +42,19 @@ class Campaign(models.Model):
 
         super().save(*args, **kwargs)
 
+class CampaignResponse(models.Model):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='responses')  # Relacionamento com a campanha
+    phone_number = models.CharField(max_length=20)  # Número de telefone do usuário
+    created_at = models.DateTimeField(auto_now_add=True)  # Data de criação da resposta
 
-    def __str__(self):
-        return f"Campanha: {self.name}"
+    class Meta:
+        unique_together = ('campaign', 'phone_number')  # Garante que o mesmo número de telefone não possa responder mais de uma vez para a mesma campanha
+
+    def save(self, *args, **kwargs):
+        # Verifica se o número já respondeu para esta campanha
+        if CampaignResponse.objects.filter(campaign=self.campaign, phone_number=self.phone_number).exists():
+            raise ValueError(f"O número {self.phone_number} já respondeu a esta campanha.")
+        super().save(*args, **kwargs)
     
 class SendMensagem(models.Model):
     STATUS_CHOICES = [

@@ -73,7 +73,7 @@ def process_campaign_contacts(self, campaign_id, tag_name, contact_name):
             random_interval = random.randint(min_interval, max_interval)
 
             # Certifique-se de verificar se o número já foi enviado antes de tentar enviar novamente
-            if numero_celular and numero_celular not in numeros_enviados:
+            if numero_celular:
                 # Verifique se há mais de uma instância e selecione adequadamente
                 inst = instance[contacts_sent % len(instance)] if instance else None
 
@@ -93,7 +93,6 @@ def process_campaign_contacts(self, campaign_id, tag_name, contact_name):
                 else:
                     campaign.send_erro += 1
 
-                numeros_enviados.append(numero_celular)
                 campaign.save()
 
             # Atraso entre as mensagens
