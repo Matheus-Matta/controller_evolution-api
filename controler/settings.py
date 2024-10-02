@@ -197,7 +197,7 @@ CELERY_RESULT_BACKEND = config("REDIS_URL")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = 'America/Sao_Paulo'
 
 CELERY_QUEUES = (
     Queue('default', Exchange('default'), routing_key='default'),
