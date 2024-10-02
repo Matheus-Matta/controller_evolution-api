@@ -1,140 +1,175 @@
 from celery import shared_task
+from celery_progress.backend import ProgressRecorder
+from django.utils import timezone
+
 from app.modulos.contact.models import Contact, Tag
 from app.modulos.instance.models import Instance
-from .models import SendMensagem , Campaign
-import random
-import time
-import requests
-from celery_progress.backend import ProgressRecorder
-from celery import shared_task
-from django.utils import timezone
+from .models import SendMensagem, Campaign
+
 import random
 import time
 import requests
 
 @shared_task(bind=True)
-def process_campaign_contacts(self, campaign_id, tag_name, contact_name):
-        
-        # Set up the progress recorder
-        progress_recorder = ProgressRecorder(self)
-        
+def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=None):
+    """
+    Tarefa Celery para processar contatos de campanha e enviar mensagens.
+    """
+    progress_recorder = ProgressRecorder(self)
+
+    # Recupera a campanha ou lança um erro se não existir
+    try:
         campaign = Campaign.objects.get(id=campaign_id)
-        contacts = Contact.objects.filter(user=campaign.user)
+    except Campaign.DoesNotExist:
+        raise ValueError(f"Campanha com id {campaign_id} não existe.")
 
-        if tag_name:
-            tag = Tag.objects.filter(user=campaign.user, name__icontains=tag_name).first()
-            if tag:
-                contacts = contacts.filter(tags=tag)
+    # Filtra os contatos com base no usuário da campanha
+    contacts = Contact.objects.filter(user=campaign.user)
 
-        if contact_name:
-            contacts = contacts.filter(name__icontains=contact_name)
+    # Aplica filtros opcionais de tag e nome de contato
+    if tag_name:
+        tag = Tag.objects.filter(user=campaign.user, name__icontains=tag_name).first()
+        if tag:
+            contacts = contacts.filter(tags=tag)
 
-        
-        instance = list(campaign.instance.all())
+    if contact_name:
+        contacts = contacts.filter(name__icontains=contact_name)
 
-        if campaign.start_number < 1 or campaign.start_number > len(contacts):
-            raise ValueError(f"O número de início ({campaign.start_number}) está fora do intervalo válido de contatos (1 a {len(contacts)}).")
+    # Ordena os contatos para garantir uma ordem consistente
+    contacts = contacts.order_by('id')
 
-        if campaign.end_number < campaign.start_number or campaign.end_number > len(contacts):
-            raise ValueError(f"O número final ({campaign.end_number}) está fora do intervalo válido de contatos (1 a {len(contacts)}).")
+    total_contacts = contacts.count()
+    if total_contacts == 0:
+        raise ValueError("Nenhum contato encontrado para a campanha.")
 
-        # Define o início e o fim baseado nos valores válidos
-        inicio = campaign.start_number - 1  # Subtraindo 1 para transformar em índice de lista (0-based index)
-        fim = campaign.end_number - 1
-        
-        campaign.total_numbers = campaign.end_number if campaign.end_number else len(contacts)
-        campaign.save()
+    # Define números de início e fim padrão se não estiverem definidos
+    start_number = campaign.start_number or 1
+    end_number = campaign.end_number or total_contacts
 
-        # Outras variáveis e lógicas
-        min_interval = campaign.start_timeout
-        max_interval = campaign.end_timeout
-        total_milliseconds = 0
+    # Valida os números de início e fim
+    if start_number < 1 or start_number > total_contacts:
+        raise ValueError(f"O número de início ({start_number}) está fora do intervalo válido (1 a {total_contacts}).")
 
-        numeros_enviados = []
-        intervalos = []
-        
-        if campaign.enable_pause:
-            for _ in range(campaign.pause_quantity):
-                intervalos.append(random.randint(inicio, fim))
+    if end_number < start_number or end_number > total_contacts:
+        raise ValueError(f"O número final ({end_number}) está fora do intervalo válido ({start_number} a {total_contacts}).")
 
-        contacts_sent = 0  # Keep track of contacts processed
+    # Ajusta índices para indexação baseada em zero
+    inicio = start_number - 1
+    fim = end_number - 1
 
-        
-        # Verifica duplicados com mais segurança e ajusta a lógica de instâncias
-        for i in range(inicio, fim + 1):
-            time_interval = 0
-            if i in intervalos:
-                time_interval += random.randint(campaign.min_pause, campaign.max_pause) * 60
+    # Atualiza o total de números na campanha
+    campaign.total_numbers = end_number - start_number + 1
+    campaign.save()
 
-            contact = contacts[i]
-            numero_celular = contact.number
-            nome = contact.name if contact.name else "Colaborador"
+    # Define intervalos mínimos e máximos com valores padrão se necessário
+    min_interval = campaign.start_timeout or 0
+    max_interval = campaign.end_timeout or 0
 
-            random_interval = random.randint(min_interval, max_interval)
+    if min_interval > max_interval:
+        raise ValueError("O tempo de início não pode ser maior que o tempo de término.")
 
-            # Certifique-se de verificar se o número já foi enviado antes de tentar enviar novamente
-            if numero_celular:
-                # Verifique se há mais de uma instância e selecione adequadamente
-                inst = instance[contacts_sent % len(instance)] if instance else None
+    # Gera índices de pausa únicos se as pausas estiverem habilitadas
+    intervalos = []
+    if campaign.enable_pause and campaign.pause_quantity:
+        total_messages = fim - inicio + 1
+        pause_quantity = min(campaign.pause_quantity, total_messages)
+        intervalos = random.sample(range(inicio, fim + 1), pause_quantity)
 
-                # Enviar a mensagem
-                status, code, msg = enviar_mensagem_whatsapp(inst, numero_celular, nome, i)
-                SendMensagem.objects.create(
-                    campaign=campaign,
-                    numero=numero_celular,
-                    status=status,
-                    code=code,
-                    msg=msg
-                )
+    # Obtém a lista de contatos relevantes
+    contacts_list = contacts[inicio:fim + 1]
 
-                # Atualize o status da campanha
-                if status == 'sucesso':
-                    campaign.send_success += 1
-                else:
-                    campaign.send_erro += 1
+    # Recupera as instâncias associadas à campanha
+    instances = list(campaign.instance.all())
+    if not instances:
+        raise ValueError("Nenhuma instância associada à campanha.")
 
-                campaign.save()
+    contacts_sent = 0  # Contador de contatos processados
+    start_time = time.time()  # Marca o tempo de início
 
-            # Atraso entre as mensagens
-            time.sleep(random_interval + time_interval)
+    for idx, contact in enumerate(contacts_list, start=inicio):
+        time_interval = 0
+        if idx in intervalos:
+            # Adiciona tempo de pausa em segundos
+            time_interval += random.randint(campaign.min_pause, campaign.max_pause) * 60
 
+        numero_celular = contact.number
+        nome = contact.name if contact.name else "Colaborador"
+
+        # Gera um intervalo aleatório entre as mensagens
+        random_interval = random.randint(min_interval, max_interval)
+
+        if numero_celular:
+            # Seleciona a instância de forma cíclica
+            inst = instances[contacts_sent % len(instances)]
+
+            # Envia a mensagem e captura o status
+            status, code, msg = enviar_mensagem_whatsapp(inst, numero_celular, nome, idx)
+            SendMensagem.objects.create(
+                campaign=campaign,
+                numero=numero_celular,
+                status=status,
+                code=code,
+                msg=msg
+            )
+
+            # Atualiza contadores da campanha
+            if status == 'sucesso':
+                campaign.send_success += 1
+            else:
+                campaign.send_erro += 1
+
+            campaign.save()
             contacts_sent += 1
 
-            # Atualize o progresso
-            progress_recorder.set_progress(contacts_sent, campaign.total_numbers, description=f"Enviando para {contact.name or 'Colaborador'}")
+            # Atualiza o progresso da tarefa
+            progress_recorder.set_progress(contacts_sent, campaign.total_numbers, description=f"Enviando para {nome}")
 
-        total_minutes = total_milliseconds // 60000
-        campaign.end_date = timezone.now()
-        campaign.status = 'finalizado'
-        campaign.save()
+        # Aguarda o intervalo calculado antes de enviar a próxima mensagem
+        total_sleep = random_interval + time_interval
+        time.sleep(total_sleep)
 
-        print(f"Disparo finalizado. Tempo total: {total_minutes // 60} horas e {total_minutes % 60} minutos")
+    end_time = time.time()
+    total_seconds = end_time - start_time
+    total_minutes = int(total_seconds // 60)
+    hours, minutes = divmod(total_minutes, 60)
 
-        return {'success': True, 'task_id': self.request.id, 'progress': 100}
+    # Atualiza o status da campanha para 'finalizado'
+    campaign.end_date = timezone.now()
+    campaign.status = 'finalizado'
+    campaign.save()
 
-def enviar_mensagem_whatsapp(instance, numero, nome, i):
-    """Função auxiliar para enviar mensagem via API"""
+    print(f"Disparo finalizado. Tempo total: {hours} horas e {minutes} minutos")
+
+    return {'success': True, 'task_id': self.request.id, 'progress': 100}
+
+def enviar_mensagem_whatsapp(instance, numero, nome, message_number):
+    """
+    Função auxiliar para enviar mensagens via API do WhatsApp.
+    """
+    if not instance:
+        return 'erro', 500, 'Instância é None.'
+
     mensagens = [
         f"👋 Oi, {nome}! Como você está?",
-        f"Como vai?, {nome}! Tudo certo?",
+        f"Como vai, {nome}? Tudo certo?",
         f"E aí, {nome}! Tudo bem com você?",
-        f"Tranquilo?, {nome}! Como vão as coisas?",
+        f"Tranquilo, {nome}? Como vão as coisas?",
         f"👋 Oi, {nome}! Tudo jóia?",
         f"Olá, {nome}! Espero que esteja bem!",
         f"Opa, {nome}! Como está indo?",
         f"Tudo bem com você, {nome}?",
         f"Olá, {nome}! Que prazer te ver!",
-        f"Como vai seu dia ?, {nome}! Tudo tranquilo?",
+        f"Como vai seu dia, {nome}? Tudo tranquilo?",
         f"Oi, {nome}! Como estão as coisas?",
-        f"Tudo em ordem por aí?, {nome}",
+        f"Tudo em ordem por aí, {nome}?",
         f"E aí, {nome}! Tudo certo?",
-        f"{nome} Tudo legal?",
+        f"{nome}, tudo legal?",
         f"Olá, {nome}! Espero que esteja ótimo!",
-        f"Iae, {nome}! Como está se sentindo?",
+        f"E aí, {nome}! Como está se sentindo?",
         f"Olá, {nome}! Tudo em paz?",
-        f"De boa?, {nome}! Que bom te ver!",
+        f"De boa, {nome}? Que bom te ver!",
         f"Fala comigo, {nome}! Como vai?",
-        f"{nome}? Tudo bem com você?"
+        f"{nome}, tudo bem com você?"
     ]
 
     mensagem = random.choice(mensagens)
@@ -154,28 +189,16 @@ def enviar_mensagem_whatsapp(instance, numero, nome, i):
         }
     }
 
-    
     try:
-        # Tenta enviar a mensagem
         response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
 
-        # Sucesso ao enviar a mensagem
-        print(f"Mensagem enviada com sucesso para {numero} de {instance.name} - Mensagem {i}")
-        return 'sucesso', response.status_code, f"[instancia] {instance.name} {response.text}"
+        # Mensagem enviada com sucesso
+        print(f"Mensagem enviada com sucesso para {numero} de {instance.name} - Mensagem {message_number}")
+        return 'sucesso', response.status_code, f"[instância] {instance.name} {response.text}"
 
     except requests.exceptions.RequestException as e:
-        # Tenta capturar o código de status e a mensagem da resposta, se existir
-        if e.response is not None:
-            code = e.response.status_code
-            print(e.response)
-            message = f"[instancia] {instance.name} Error ao enviar mensagem"   # Captura a mensagem de erro da resposta
-        else:
-            code = 500  # Código genérico caso não exista resposta do servidor
-            message = f"[instancia] {instance.name} Error ao enviar mensagem"  # Mensagem padrão da exceção
-
-        # Retorna o erro com o código e a mensagem correta
+        code = e.response.status_code if e.response else 500
+        message = f"[instância] {instance.name} Erro ao enviar mensagem: {str(e)}"
         print(f"Erro ao enviar mensagem para {numero}: {message}")
         return 'erro', code, message
-    
-        

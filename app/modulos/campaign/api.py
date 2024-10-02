@@ -45,7 +45,8 @@ def list_campaign(request):
                 'send_error': campaign.send_error,
                 'start_date': campaign.start_date,
                 'end_date': campaign.end_date,
-                'response_count': response_count
+                'response_count': response_count,
+                'id_progress': campaign.id_progress,
             })
 
         return JsonResponse({'campaigns': campaigns_data}, status=200)
