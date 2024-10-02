@@ -199,11 +199,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'America/Sao_Paulo'
 
-CELERY_ACKS_LATE = True  #garante que as tasks sejam reexecutadas se não tiverem sido finalizadas
-CELERY_TRACK_STARTED = True  # Acompanha quando uma task foi iniciada
-CELERYD_PREFETCH_MULTIPLIER = 1  # Faz com que o worker pegue uma tarefa por vez
-CELERY_TASK_REJECT_ON_WORKER_LOST = True  # Para que tasks parcialmente completadas possam ser reprocessadas
-
 CELERY_QUEUES = (
     Queue('default', Exchange('default'), routing_key='default'),
     Queue('high_priority', Exchange('high_priority'), routing_key='high'),
