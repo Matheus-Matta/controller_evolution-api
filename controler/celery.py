@@ -10,6 +10,10 @@ os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
 
 app = Celery('controler')
 
+app.conf.update(
+    timezone='America/Sao_Paulo',
+    enable_utc=False,  # Desabilite UTC
+)
 # Lê as configurações do Django no Celery
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
