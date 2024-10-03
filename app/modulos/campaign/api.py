@@ -98,10 +98,11 @@ def campaign_encerrar(request, campaign_id):
 @api_view(['POST'])
 def campaign_add_response(request, instance_name):
     try:
+        
+
         instance = Instance.objects.get(name=instance_name)
         campaign = Campaign.objects.get(instance=instance)
         number = request.POST.get('number')
-
         if campaign.status == "processando":
             # Verificar se o número já respondeu
             if not campaign.responses.filter(phone_number=number).exists():
@@ -116,14 +117,14 @@ def campaign_add_response(request, instance_name):
         else:
             return JsonResponse({"error": "Campanha não está processando."}, status=400)
 
+        print('Resposta registrada para todas as campanhas ativas.', instance_name, campaign.name)
         return JsonResponse({"success": "Resposta registrada para todas as campanhas ativas."}, status=201)
-
     except Instance.DoesNotExist:
-        return JsonResponse({"error": "Instância não encontrada"}, status=404)
+        return JsonResponse({"error": "Instância não encontrada"}, status=400)
     except Campaign.DoesNotExist:
-        return JsonResponse({"error": "Campanha não encontrada"}, status=404)
+        return JsonResponse({"error": "Campanha não encontrada"}, status=400)
     except Exception as e:
-        return JsonResponse({"error": f"Erro ao registrar resposta: {str(e)}"}, status=500)
+        return JsonResponse({"error": f"Erro ao registrar resposta: {str(e)}"}, status=400)
 
 @api_view(['POST'])
 def campaign_delete(request, campaign_id):
