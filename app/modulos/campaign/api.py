@@ -102,7 +102,8 @@ def campaign_add_response(request, instance_name):
 
         instance = Instance.objects.get(name=instance_name)
         campaign = Campaign.objects.filter(instance=instance, status='processando').first()
-
+        if not campaign:
+            return JsonResponse({"error": "campanha nao existe"}, status=400)
         # Obtém o número do request, use request.data para trabalhar com JSON
         number = request.data.get('number') if request.content_type == 'application/json' else request.POST.get('number')
         if not number:
@@ -129,7 +130,7 @@ def campaign_add_response(request, instance_name):
     except Campaign.DoesNotExist:
         return JsonResponse({"error": "Campanha não encontrada"}, status=400)
     except Exception as e:
-        return JsonResponse({"error": f"Erro ao registrar resposta: {str(e)}"}, status=400)
+        return JsonResponse({"error": f"Erro ao registrar resposta: {str(e)}"}, status=500)
 
 @api_view(['POST'])
 def campaign_delete(request, campaign_id):
