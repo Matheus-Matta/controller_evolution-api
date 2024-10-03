@@ -101,7 +101,7 @@ def campaign_add_response(request, instance_name):
         
 
         instance = Instance.objects.get(name=instance_name)
-        campaign = Campaign.objects.get(instance=instance, status='processando').first()
+        campaign = Campaign.objects.filter(instance=instance, status='processando').first()
         number = request.POST.get('number')
         if campaign.status == "processando":
             # Verificar se o número já respondeu
