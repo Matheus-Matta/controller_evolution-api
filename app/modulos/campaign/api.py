@@ -102,7 +102,12 @@ def campaign_add_response(request, instance_name):
 
         instance = Instance.objects.get(name=instance_name)
         campaign = Campaign.objects.filter(instance=instance, status='processando').first()
-        number = request.POST.get('number')
+
+        # Obtém o número do request, use request.data para trabalhar com JSON
+        number = request.data.get('number') if request.content_type == 'application/json' else request.POST.get('number')
+        if not number:
+             return JsonResponse({"error": "Número não encontrado"}, status=400)
+        
         if campaign.status == "processando":
             # Verificar se o número já respondeu
             if not campaign.responses.filter(phone_number=number).exists():
