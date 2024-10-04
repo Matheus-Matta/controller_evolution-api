@@ -16,7 +16,7 @@ from kombu import Exchange, Queue
 
 PORT=config("PORT", default=3000)
 SSL = 'https' if config("SSL", default=False, cast=bool) else 'http'
-BASE_URL = f'{SSL}://{config("DOMAIN", default="localhost")}:{PORT}'
+BASE_URL = f'{SSL}://{config("DOMAIN", default=f"localhost:{PORT}")}'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
