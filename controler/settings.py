@@ -15,8 +15,7 @@ from decouple import config
 from kombu import Exchange, Queue
 
 PORT=config("PORT", default=3000)
-SSL = 'https' if config("SSL", default=False, cast=bool) else 'http'
-BASE_URL = f'{SSL}://{config("DOMAIN", default=f"localhost:{PORT}")}'
+BASE_URL = config('URL',default=f"{config('DOMAIN', default=f'localhost:{config('PORT', default=3000)}')}")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
