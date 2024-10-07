@@ -1,3 +1,4 @@
+
 from celery import shared_task
 from celery_progress.backend import ProgressRecorder
 from django.utils import timezone
@@ -100,30 +101,50 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
             random_interval = random.randint(min_interval, max_interval)
 
             if numero_celular:
-                # Seleciona a instância de forma cíclica
-                inst = instances[contacts_sent % len(instances)]
+                try:
+                    # Seleciona a instância de forma cíclica
+                    inst = instances[contacts_sent % len(instances)]
 
-                # Envia a mensagem e captura o status
-                status, code, msg = enviar_mensagem_whatsapp(inst, numero_celular, nome, idx)
-                SendMensagem.objects.create(
-                    campaign=campaign,
-                    numero=numero_celular,
-                    status=status,
-                    code=code,
-                    msg=msg
-                )
+                    # Envia a mensagem e captura o status
+                    status, code, msg = enviar_mensagem_whatsapp(inst, numero_celular, nome, idx)
+                    SendMensagem.objects.create(
+                        campaign=campaign,
+                        numero=numero_celular,
+                        status=status,
+                        code=code,
+                        msg=msg
+                    )
 
-                # Atualiza contadores da campanha
-                if status == 'sucesso':
-                    campaign.send_success += 1
-                else:
+                    # Atualiza contadores da campanha
+                    if status == 'sucesso':
+                        campaign.send_success += 1
+                    else:
+                        campaign.send_erro += 1
+
+                    campaign.save()
+                    contacts_sent += 1
+
+                    # Atualiza o progresso da tarefa
+                    progress_recorder.set_progress(contacts_sent, campaign.total_numbers, description=f"Enviando para {nome}")
+
+                except Exception as e:
+                    # Loga o erro e continua a execução
+                    print(f"Erro ao enviar mensagem para {numero_celular}: {str(e)}")
+                    # Salva o erro no SendMensagem
+                    SendMensagem.objects.create(
+                        campaign=campaign,
+                        numero=numero_celular,
+                        status='erro',
+                        code=500,
+                        msg=str(e)
+                    )
+                    # Atualiza contadores de erro
                     campaign.send_erro += 1
+                    campaign.save()
+                    contacts_sent += 1
 
-                campaign.save()
-                contacts_sent += 1
-
-                # Atualiza o progresso da tarefa
-                progress_recorder.set_progress(contacts_sent, campaign.total_numbers, description=f"Enviando para {nome}")
+                    # Atualiza o progresso da tarefa
+                    progress_recorder.set_progress(contacts_sent, campaign.total_numbers, description=f"Erro ao enviar para {nome}")
 
             # Aguarda o intervalo calculado antes de enviar a próxima mensagem
             total_sleep = random_interval + time_interval
@@ -144,9 +165,7 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
         return {'success': True, 'task_id': self.request.id, 'progress': 100}
     except Exception as e:
         print(f"Erro exception {e}")
-        raise ValueError("Error ao iniciar camapanha.")
-
-
+        raise ValueError("Erro ao iniciar campanha.")
 
 def enviar_mensagem_whatsapp(instance, numero, nome, message_number):
     """
