@@ -119,7 +119,7 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
                     if status == 'sucesso':
                         campaign.send_success += 1
                     else:
-                        campaign.send_erro += 1
+                        campaign.send_error += 1
 
                     campaign.save()
                     contacts_sent += 1
@@ -138,8 +138,9 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
                         code=500,
                         msg=str(e)
                     )
+                    
                     # Atualiza contadores de erro
-                    campaign.send_erro += 1
+                    campaign.send_error += 1
                     campaign.save()
                     contacts_sent += 1
 
