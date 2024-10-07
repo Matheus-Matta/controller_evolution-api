@@ -10,7 +10,7 @@ class Campaign(models.Model):
     total_numbers = models.IntegerField(null=True, blank=True)  # Quantidade total de números a serem enviados
     status = models.CharField(max_length=15, null=True)
     send_success = models.IntegerField(default=0)  # Quantidade de números já enviados com sucesso
-    send_error = models.IntegerField(default=0)  # Quantidade de erros
+    send_erro = models.IntegerField(default=0)  # Quantidade de erros
     start_date = models.DateTimeField()  # Data de início da campanha
     end_date = models.DateTimeField(null=True, blank=True)  # Data de término da campanha
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Usuário que criou a campanha
