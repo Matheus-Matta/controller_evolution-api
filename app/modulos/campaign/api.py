@@ -104,7 +104,7 @@ def campaign_add_response(request, instance_name):
         
 
         instance = Instance.objects.get(name=instance_name)
-        campaign = Campaign.objects.filter(instance=instance, status='processando').first()
+        campaign = Campaign.objects.filter(instance=instance).first()
         if not campaign:
             return JsonResponse({"error": "campanha nao existe"}, status=400)
         # Obtém o número do request, use request.data para trabalhar com JSON
