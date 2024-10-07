@@ -26,7 +26,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -52,9 +51,9 @@ INSTALLED_APPS = [
     'app.modulos.login',
     'app.modulos.instance',
     'app.modulos.webhook',
-    'app.modulos.contact',
+    'app.modulos.contact.apps.contactConfig',
     'app.modulos.tags',
-    'app.modulos.campaign',
+    'app.modulos.campaign.apps.campanhaConfig',
     'celery_progress',
     'corsheaders',
 
