@@ -52,6 +52,7 @@ def list_campaign(request):
         return JsonResponse({'campaigns': campaigns_data}, status=200)
 
     except Exception as e:
+        print(f"error {e}")
         return JsonResponse({'error': str(e)}, status=500)
     
 
@@ -69,6 +70,7 @@ def campaign_details(request, campaign_id):
     except Campaign.DoesNotExist:
         return JsonResponse({'error': 'Campanha não encontrada'}, status=404)
     except Exception as e:
+        print(f"error {e}")
         return JsonResponse({'error': str(e)}, status=500)
 
 
@@ -93,6 +95,7 @@ def campaign_encerrar(request, campaign_id):
                     return JsonResponse({"error": "Campanha não encontrada"}, status=401)
 
             except Exception as e:
+                    print(f"error {e}")
                     return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
 
 @api_view(['POST'])
@@ -130,6 +133,7 @@ def campaign_add_response(request, instance_name):
     except Campaign.DoesNotExist:
         return JsonResponse({"error": "Campanha não encontrada"}, status=400)
     except Exception as e:
+        print(f"error {e}")
         return JsonResponse({"error": f"Erro ao registrar resposta: {str(e)}"}, status=500)
 
 @api_view(['POST'])
@@ -150,6 +154,7 @@ def campaign_delete(request, campaign_id):
                     return JsonResponse({"error": "Campanha não encontrada"}, status=401)
 
             except Exception as e:
+                    print(f"error {e}")
                     return JsonResponse({"error": f"error ao encerrar campanha {str(e)}"}, status=500)
 
 @api_view(['GET'])
