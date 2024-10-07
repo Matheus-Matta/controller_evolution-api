@@ -109,7 +109,7 @@ def campaign_add_response(request, instance_name):
         if not number:
              return JsonResponse({"error": "Número não encontrado"}, status=400)
         
-        if campaign.status == "processando":
+        if campaign.status != "cancelado":
             # Verificar se o número já respondeu
             if not campaign.responses.filter(phone_number=number).exists():
                 # Criar uma nova resposta para a campanha
