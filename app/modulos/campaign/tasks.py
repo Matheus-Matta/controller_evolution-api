@@ -33,9 +33,9 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
         start_number = campaign.start_number or 1
         end_number = campaign.end_number or total_contacts
         
-        # Seleciona os contatos entre o número inicial e final
-        contacts_list = contacts[start_number-1:end_number]
-        contacts_chunks = [list(contacts_list[i:i + CHUNK_SIZE].values_list('id', flat=True)) for i in range(0, len(contacts_list), CHUNK_SIZE)]
+        # Seleciona os IDs dos contatos entre o número inicial e final
+        contacts_list = contacts[start_number-1:end_number].values_list('id', flat=True)
+        contacts_chunks = [list(contacts_list[i:i + CHUNK_SIZE]) for i in range(0, len(contacts_list), CHUNK_SIZE)]
 
         # Cria uma lista de subtasks
         group_tasks = [enviar_mensagens_para_grupo.s(campaign_id, chunk) for chunk in contacts_chunks]
