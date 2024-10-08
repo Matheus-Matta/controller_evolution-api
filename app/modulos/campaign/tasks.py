@@ -9,49 +9,7 @@ import random
 import time
 import requests
 
-CHUNK_SIZE = 250  # Define o tamanho do grupo de contatos a ser processado em cada subtarefa
-
-@shared_task(bind=True)
-def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=None):
-    try:
-        """
-        Tarefa principal para processar os contatos da campanha e enviar mensagens em paralelo.
-        Divide os contatos em blocos menores e distribui a carga.
-        """
-        campaign = Campaign.objects.get(id=campaign_id)
-        
-        # Filtra os contatos com base no usuário da campanha e nos filtros opcionais
-        contacts = Contact.objects.filter(user=campaign.user)
-        if tag_name:
-            tag = Tag.objects.filter(user=campaign.user, name__icontains=tag_name).first()
-            if tag:
-                contacts = contacts.filter(tags=tag)
-        if contact_name:
-            contacts = contacts.filter(name__icontains=contact_name)
-        
-        total_contacts = contacts.count()
-        if total_contacts == 0:
-            raise ValueError("Nenhum contato encontrado para a campanha.")
-        
-        # Ajusta o número inicial e final de envio, se definidos
-        start_number = campaign.start_number or 1
-        end_number = campaign.end_number or total_contacts
-        
-        # Divide os contatos em blocos menores para processamento paralelo
-        contacts_list = contacts[start_number-1:end_number]  # Seleciona os contatos entre o número inicial e final
-        contacts_chunks = [contacts_list[i:i + CHUNK_SIZE] for i in range(0, len(contacts_list), CHUNK_SIZE)]
-        
-        # Cria um grupo de tarefas Celery para processar cada bloco de contatos em paralelo
-        group_tasks = group(
-            enviar_mensagens_para_grupo.s(campaign_id, chunk) for chunk in contacts_chunks
-        )
-        
-        # Executa as tarefas em paralelo
-        result = group_tasks.apply_async()
-        return result.join()  # Espera o resultado de todas as subtarefas
-    except Exception as e:
-        print(f"Erro exception {e}")
-        raise ValueError("Erro ao iniciar campanha.")
+CHUNK_SIZE = 250 
 
 @shared_task(bind=True)
 def enviar_mensagens_para_grupo(self, campaign_id, contacts_chunk):
