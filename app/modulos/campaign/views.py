@@ -21,69 +21,81 @@ from django.urls import reverse
 
 @login_required
 def campaign(request):
-     if request.method == 'GET':
-          try:
-               context = get_contacts(request)
+    if request.method == 'GET':
+        try:
+            context = get_contacts(request)
 
-               form = CampaignForm(user=request.user)
-               context['form'] = form
-               context['campaign'] = True
-               
-               return render(request, 'campaign.html', context)
-          except Exception as e:
-               print(e)
-               messages.error(request,  f'error ao tentar entra na campanha {str(e)}')
-               return redirect("user_login")
-          
-     elif request.method == 'POST':
-          try:
-               name = request.POST.get('name')
-               pause_quantity = request.POST.get('pause_quantity')
-               start_number = int(request.POST.get('start_number'))
-               end_number = int(request.POST.get('end_number'))
-               enable_pause = request.POST.get('enable_pause', False)
-               min_pause = int(request.POST.get('min_pause')) if enable_pause else None
-               max_pause = int(request.POST.get('max_pause')) if enable_pause else None
-               pause_quantity = int(request.POST.get('pause_quantity')) if enable_pause else None
-               start_timeout = int(request.POST.get('start_timeout'))
-               end_timeout = int(request.POST.get('end_timeout'))
-               send_greeting = request.POST.get('send_greeting')
-               instances = Instance.objects.filter(user=request.user, id__in=request.POST.getlist('instance'))
+            form = CampaignForm(user=request.user)
+            context['form'] = form
+            context['campaign'] = True
 
-               tag_name = request.POST.get('tag_name')
-               contact_name = request.POST.get('contact_name')
+            return render(request, 'campaign.html', context)
+        except Exception as e:
+            print(f"[campaign GET] Error: {e}")
+            messages.error(request, f"Erro ao tentar entrar na campanha: {str(e)}")
+            return redirect("user_login")
 
-              # Criar a campanha sem as instâncias
-               campaign = Campaign.objects.create(
-                    name=name,
-                    status='processando',
-                    start_number=start_number,
-                    end_number=end_number,
-                    start_date=timezone.now(),
-                    start_timeout=start_timeout,
-                    end_timeout=end_timeout,
-                    send_greeting=bool(send_greeting),
-                    enable_pause=bool(enable_pause),
-                    min_pause=min_pause if enable_pause else None,
-                    max_pause=max_pause if enable_pause else None,
-                    pause_quantity=pause_quantity if enable_pause else None,
-                    user=request.user
-               )
+    elif request.method == 'POST':
+        try:
+            # Coleta os dados do formulário
+            name = request.POST.get('name')
+            start_number = int(request.POST.get('start_number'))
+            end_number = int(request.POST.get('end_number'))
+            start_timeout = int(request.POST.get('start_timeout'))
+            end_timeout = int(request.POST.get('end_timeout'))
+            send_greeting = request.POST.get('send_greeting') == 'on'
+            enable_pause = request.POST.get('enable_pause') == 'on'
 
-               # Adicionar as instâncias ao campo ManyToMany
-               campaign.instance.set(instances)
+            # Verifica se a pausa está habilitada e captura os valores
+            min_pause = int(request.POST.get('min_pause')) if enable_pause else None
+            max_pause = int(request.POST.get('max_pause')) if enable_pause else None
+            pause_quantity = int(request.POST.get('pause_quantity')) if enable_pause else None
 
-               # Chama a task para processar os contatos (descomentar quando a task estiver definida)
-               result = process_campaign_contacts.apply_async((campaign.id, tag_name, contact_name), queue='messages')
-               campaign.id_progress = result.task_id
-               campaign.save()
-               return redirect(reverse('campaign_progress', args=[result.task_id]))
-          
-          except Exception as e:
-               print(f'[campaign] error {str(e)}')
-               messages.error(request,  f'error ao iniciar a campanha {str(e)}')
-               return redirect("user_login") 
+            # Coleta as instâncias selecionadas
+            instances = Instance.objects.filter(user=request.user, id__in=request.POST.getlist('instance'))
 
+            tag_name = request.POST.get('tag_name')
+            contact_name = request.POST.get('contact_name')
+
+            # Verifica se as instâncias foram selecionadas
+            if not instances.exists():
+                messages.error(request, "Nenhuma instância selecionada para a campanha.")
+                return redirect("campaign")
+
+            # Cria a campanha sem as instâncias (inicialmente)
+            campaign = Campaign.objects.create(
+                name=name,
+                status='processando',
+                start_number=start_number,
+                end_number=end_number,
+                start_date=timezone.now(),
+                start_timeout=start_timeout,
+                end_timeout=end_timeout,
+                send_greeting=send_greeting,
+                enable_pause=enable_pause,
+                min_pause=min_pause,
+                max_pause=max_pause,
+                pause_quantity=pause_quantity,
+                user=request.user
+            )
+
+            # Adiciona as instâncias
+            campaign.instance.set(instances)
+
+            # Chama a task de forma assíncrona, passando os parâmetros
+            result = process_campaign_contacts.apply_async((campaign.id, tag_name, contact_name), queue='messages')
+
+            # Associa o ID da task à campanha para poder monitorar o progresso
+            campaign.id_progress = result.task_id
+            campaign.save()
+
+            # Redireciona para a página de progresso da campanha
+            return redirect(reverse('campaign_progress', args=[result.task_id]))
+
+        except Exception as e:
+            print(f"[campaign POST] Error: {e}")
+            messages.error(request, f"Erro ao iniciar a campanha: {str(e)}")
+            return redirect("user_login")
 
 @login_required
 def campaign_progress(request, task_id):
