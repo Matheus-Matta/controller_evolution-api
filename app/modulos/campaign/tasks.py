@@ -8,9 +8,64 @@ from .models import SendMensagem, Campaign, CampaignMessage
 import random
 import time
 import requests
+from celery import chord
 
 CHUNK_SIZE = 250 
 
+@shared_task(bind=True)
+def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=None):
+    try:
+        campaign = Campaign.objects.get(id=campaign_id)
+        
+        # Filtra os contatos com base no usuário da campanha e nos filtros opcionais
+        contacts = Contact.objects.filter(user=campaign.user)
+        if tag_name:
+            tag = Tag.objects.filter(user=campaign.user, name__icontains=tag_name).first()
+            if tag:
+                contacts = contacts.filter(tags=tag)
+        if contact_name:
+            contacts = contacts.filter(name__icontains=contact_name)
+        
+        total_contacts = contacts.count()
+        if total_contacts == 0:
+            raise ValueError("Nenhum contato encontrado para a campanha.")
+        
+        start_number = campaign.start_number or 1
+        end_number = campaign.end_number or total_contacts
+        
+        # Seleciona os contatos entre o número inicial e final
+        contacts_list = contacts[start_number-1:end_number]
+        contacts_chunks = [contacts_list[i:i + CHUNK_SIZE] for i in range(0, len(contacts_list), CHUNK_SIZE)]
+
+        # Cria uma lista de subtasks
+        group_tasks = [enviar_mensagens_para_grupo.s(campaign_id, chunk) for chunk in contacts_chunks]
+
+        # Usa um chord para rodar as subtasks e processar o callback quando todas terminarem
+        callback_task = process_campaign_callback.s(campaign_id)
+        result = chord(group_tasks)(callback_task)
+        return result
+
+    except Exception as e:
+        print(f"Erro exception {e}")
+        raise ValueError("Erro ao iniciar campanha.")
+
+
+@shared_task(bind=True)
+def process_campaign_callback(self, campaign_id):
+    """
+    Task que processa os resultados depois que todas as subtasks foram executadas.
+    """
+    try:
+        campaign = Campaign.objects.get(id=campaign_id)
+        # Aqui você pode fazer algum processamento final ou notificar sobre o sucesso
+        campaign.status = 'finalizado'
+        campaign.save()
+        return {'success': True, 'message': 'Campanha finalizada com sucesso'}
+    except Exception as e:
+        print(f"Erro ao finalizar campanha: {str(e)}")
+        raise ValueError(f"Erro ao finalizar campanha: {str(e)}")
+    
+    
 @shared_task(bind=True)
 def enviar_mensagens_para_grupo(self, campaign_id, contacts_chunk):
     """
