@@ -48,11 +48,12 @@ class SendMensagem(models.Model):
     STATUS_CHOICES = [
         ('sucesso', 'Sucesso'),
         ('erro', 'Erro'),
+        ('response', 'Resposta'),
     ]
 
     campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, related_name='mensagens_enviadas')
     numero = models.CharField(max_length=20)  # Número de telefone
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)  # Status (sucesso ou erro)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)  # Status (sucesso, erro, resposta)
     msg = models.TextField(null=True, blank=True)
     code = models.CharField(max_length=10)  # Mensagem de resposta da API
     created_at = models.DateTimeField(auto_now_add=True)  # Data de criação

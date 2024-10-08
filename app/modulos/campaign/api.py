@@ -35,7 +35,7 @@ def list_campaign(request):
         # Serializar os dados e incluir a contagem de respostas para cada campanha
         campaigns_data = []
         for campaign in campaigns:
-            response_count = CampaignMessage.objects.filter(campaign=campaign).count()
+            response_count = CampaignMessage.objects.filter(campaigns=campaign, status='respondida').count()
             campaigns_data.append({
                 'id': campaign.id,
                 'name': campaign.name,
@@ -61,11 +61,38 @@ def campaign_details(request, campaign_id):
     try:
         campaign = Campaign.objects.get(id=campaign_id)
         logs = SendMensagem.objects.filter(campaign=campaign_id)
-        responses = CampaignMessage.objects.filter(campaign=campaign)
+        responses = CampaignMessage.objects.filter(campaigns=campaign)
+
+        # Serializar a campanha
+        campaign_data = {
+            'id': campaign.id,
+            'name': campaign.name,
+            'total_numbers': campaign.total_numbers,
+            'status': campaign.status,
+            'send_success': campaign.send_success,
+            'send_error': campaign.send_error,
+            'start_date': campaign.start_date,
+            'end_date': campaign.end_date,
+            'id_progress': campaign.id_progress,
+        }
+
+        # Serializar os logs
+        logs_data = serializers.serialize('json', logs)
+
+        # Serializar as respostas
+        responses_data = []
+        for response in responses:
+            responses_data.append({
+                'numero': response.numero,
+                'status': response.status,
+                'response_date': response.response_date,
+                'response_message': response.response_message,
+            })
+
         return JsonResponse({
-            'campaign': serializers.serialize('json', [campaign]),  # Serialize a campanha
-            'logs': serializers.serialize('json', logs),  # Serialize os logs
-            'responses': responses,  # Adicionar contagem de respostas
+            'campaign': campaign_data,
+            'logs': logs_data,
+            'responses': responses_data,
         }, status=200)
     except Campaign.DoesNotExist:
         return JsonResponse({'error': 'Campanha não encontrada'}, status=404)
@@ -139,7 +166,7 @@ def campaign_add_response(request, instance_name):
                         code=200,
                         msg=message_content
                     )
-                    campaign.response += 1
+                    campaign.response_count += 1
                     campaign.save()
 
                 else:
