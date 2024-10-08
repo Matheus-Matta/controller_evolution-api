@@ -61,7 +61,6 @@ def campaign_details(request, campaign_id):
     try:
         campaign = Campaign.objects.get(id=campaign_id)
         logs = SendMensagem.objects.filter(campaign=campaign_id)
-        responses = CampaignMessage.objects.filter(campaigns=campaign)
 
         # Serializar a campanha
         campaign_data = {
@@ -79,21 +78,11 @@ def campaign_details(request, campaign_id):
         # Serializar os logs
         logs_data = serializers.serialize('json', logs)
 
-        # Serializar as respostas
-        responses_data = []
-        for response in responses:
-            responses_data.append({
-                'numero': response.numero,
-                'status': response.status,
-                'response_date': response.response_date,
-                'response_message': response.response_message,
-            })
-
         return JsonResponse({
             'campaign': campaign_data,
             'logs': logs_data,
-            'responses': responses_data,
         }, status=200)
+    
     except Campaign.DoesNotExist:
         return JsonResponse({'error': 'Campanha não encontrada'}, status=404)
     except Exception as e:
