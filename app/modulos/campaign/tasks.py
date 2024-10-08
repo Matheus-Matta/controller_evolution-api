@@ -118,12 +118,12 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
                     # Atualiza contadores da campanha
                     if status == 'sucesso':
                         campaign.send_success += 1
-                        CampaignMessage.objects.create(
-                            campaigns=[campaign],  # Associando a campanha
+                        campaign_message = CampaignMessage.objects.create(
                             instance=inst,
                             numero=numero_celular,
                             status='pendente'  # Iniciando como pendente
                         )
+                        campaign_message.campaigns.set([campaign])
                     else:
                         campaign.send_error += 1
 
