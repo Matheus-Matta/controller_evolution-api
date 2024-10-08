@@ -51,15 +51,17 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
 
 
 @shared_task(bind=True)
-def process_campaign_callback(self, campaign_id):
+def process_campaign_callback(self, results, campaign_id):
     """
     Task que processa os resultados depois que todas as subtasks foram executadas.
     """
     try:
         campaign = Campaign.objects.get(id=campaign_id)
+        
         # Aqui você pode fazer algum processamento final ou notificar sobre o sucesso
         campaign.status = 'finalizado'
         campaign.save()
+        
         return {'success': True, 'message': 'Campanha finalizada com sucesso'}
     except Exception as e:
         print(f"Erro ao finalizar campanha: {str(e)}")
