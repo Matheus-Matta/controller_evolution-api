@@ -113,10 +113,28 @@ def campaign_progress(request, task_id):
             return redirect("user_login")
         else:
             task_result = result.result
-            if task_result.get('success', False):
-                return render(request, 'progress.html', {'task_id': task_id, 'campaign': campaign})
+
+            # Verifica se o task_result é um dicionário, para garantir que tem o método .get()
+            if isinstance(task_result, dict):
+                if task_result.get('success', False):
+                    return render(request, 'progress.html', {'task_id': task_id, 'campaign': campaign})
+                else:
+                    messages.error(request, task_result.get('message'))
+                    return redirect('campaign')
+
+            # Caso o task_result seja uma lista, você pode iterar sobre ela ou tratá-la adequadamente
+            elif isinstance(task_result, list):
+                for item in task_result:
+                    # Caso precise processar cada item da lista
+                    if isinstance(item, dict) and item.get('success', False):
+                        return render(request, 'progress.html', {'task_id': task_id, 'campaign': campaign})
+                # Se não houver sucesso em nenhum item
+                messages.error(request, "A campanha não foi processada com sucesso.")
+                return redirect('campaign')
+            
             else:
-                messages.error(request, task_result.get('message'))
+                # Caso o resultado seja algum outro tipo de dado inesperado
+                messages.error(request, "Erro inesperado no processamento da campanha.")
                 return redirect('campaign')
     else:
         return render(request, 'progress.html', {'task_id': task_id, 'status': 'in_progress', 'campaign': campaign})
