@@ -73,7 +73,7 @@ def campaign_details(request, campaign_id):
             'start_date': campaign.start_date,
             'end_date': campaign.end_date,
             'id_progress': campaign.id_progress,
-            'response': campaign.response_count
+            'response_count': campaign.response_count
         }
 
         # Serializar os logs
