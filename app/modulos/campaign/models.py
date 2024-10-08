@@ -21,6 +21,7 @@ class Campaign(models.Model):
     instance = models.ManyToManyField(Instance)  # Instância
     start_number = models.IntegerField()  # Número inicial para envio
     end_number = models.IntegerField()  # Número final para envio
+    response_count =  models.IntegerField(default=0)
 
     # Configurações de pausa entre mensagens
     enable_pause = models.BooleanField(default=False)  # Habilitar pausas entre mensagens
@@ -42,19 +43,6 @@ class Campaign(models.Model):
 
         super().save(*args, **kwargs)
 
-class CampaignResponse(models.Model):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='responses')  # Relacionamento com a campanha
-    phone_number = models.CharField(max_length=20)  # Número de telefone do usuário
-    created_at = models.DateTimeField(auto_now_add=True)  # Data de criação da resposta
-
-    class Meta:
-        unique_together = ('campaign', 'phone_number')  # Garante que o mesmo número de telefone não possa responder mais de uma vez para a mesma campanha
-
-    def save(self, *args, **kwargs):
-        # Verifica se o número já respondeu para esta campanha
-        if CampaignResponse.objects.filter(campaign=self.campaign, phone_number=self.phone_number).exists():
-            raise ValueError(f"O número {self.phone_number} já respondeu a esta campanha.")
-        super().save(*args, **kwargs)
     
 class SendMensagem(models.Model):
     STATUS_CHOICES = [
@@ -71,3 +59,20 @@ class SendMensagem(models.Model):
 
     def __str__(self):
         return f"Envio para {self.numero} - {self.status}"
+
+
+class CampaignMessage(models.Model):
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('respondida', 'Respondida'),
+    ]
+
+    campaigns = models.ManyToManyField('Campaign', related_name='campaign_messages')  # Campanhas associadas
+    instance = models.ForeignKey(Instance, on_delete=models.CASCADE)  # Instância utilizada para o envio
+    numero = models.CharField(max_length=20)  # Número de telefone
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pendente')  # Status de resposta
+    created_at = models.DateTimeField(auto_now_add=True)  # Data de criação
+    response_date = models.DateTimeField(null=True, blank=True)  # Data de recebimento da resposta
+
+    def __str__(self):
+        return f"Mensagem para {self.numero} - {self.status}"

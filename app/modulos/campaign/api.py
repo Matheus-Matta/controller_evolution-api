@@ -1,5 +1,5 @@
 from rest_framework.decorators import api_view
-from .models import Campaign , SendMensagem, CampaignResponse
+from .models import Campaign , SendMensagem, CampaignMessage
 from django.http import JsonResponse
 from django.core import serializers
 from django.utils import timezone
@@ -35,7 +35,7 @@ def list_campaign(request):
         # Serializar os dados e incluir a contagem de respostas para cada campanha
         campaigns_data = []
         for campaign in campaigns:
-            response_count = CampaignResponse.objects.filter(campaign=campaign).count()
+            response_count = CampaignMessage.objects.filter(campaign=campaign).count()
             campaigns_data.append({
                 'id': campaign.id,
                 'name': campaign.name,
@@ -61,7 +61,7 @@ def campaign_details(request, campaign_id):
     try:
         campaign = Campaign.objects.get(id=campaign_id)
         logs = SendMensagem.objects.filter(campaign=campaign_id)
-        responses = CampaignResponse.objects.filter(campaign=campaign).count()
+        responses = CampaignMessage.objects.filter(campaign=campaign)
         return JsonResponse({
             'campaign': serializers.serialize('json', [campaign]),  # Serialize a campanha
             'logs': serializers.serialize('json', logs),  # Serialize os logs
@@ -101,37 +101,57 @@ def campaign_encerrar(request, campaign_id):
 @api_view(['POST'])
 def campaign_add_response(request, instance_name):
     try:
-        
-
+        # Obtém a instância pelo nome
         instance = Instance.objects.get(name=instance_name)
-        campaign = Campaign.objects.filter(instance=instance).first()
-        if not campaign:
-            return JsonResponse({"error": "campanha nao existe"}, status=400)
-        # Obtém o número do request, use request.data para trabalhar com JSON
-        number = request.data.get('number') if request.content_type == 'application/json' else request.POST.get('number')
-        if not number:
-             return JsonResponse({"error": "Número não encontrado"}, status=400)
-        
-        if campaign.status != "cancelado":
-            # Verificar se o número já respondeu
-            if not campaign.responses.filter(phone_number=number).exists():
-                # Criar uma nova resposta para a campanha
-                CampaignResponse.objects.create(
-                    campaign=campaign,
-                    phone_number=number
-                )
-                campaign.save()
-            else:
-                return JsonResponse({"error": "Número já respondeu a esta campanha."}, status=400)
-        else:
-            return JsonResponse({"error": "Campanha não está processando."}, status=400)
 
-        print('Resposta registrada para todas as campanhas ativas.', instance_name, campaign.name)
-        return JsonResponse({"success": "Resposta registrada para todas as campanhas ativas."}, status=201)
+        # Obtém o número e o conteúdo da mensagem do request
+        number = request.data.get('number')
+        message_content = request.data.get('message')
+
+        if not number:
+            return JsonResponse({"error": "Número não encontrado"}, status=400)
+
+        # Encontra todas as CampaignMessage pendentes para este número e instância
+        pending_messages = CampaignMessage.objects.filter(
+            numero=number,
+            instance=instance,
+            status='pendente'
+        )
+
+        if not pending_messages.exists():
+            return JsonResponse({"error": "Nenhuma campanha aguardando resposta para este número."}, status=400)
+
+        for campaign_message in pending_messages:
+            # Atualiza o status para 'respondida' e registra a data e a mensagem de resposta
+            campaign_message.status = 'respondida'
+            campaign_message.response_date = timezone.now()
+            campaign_message.response_message = message_content
+            campaign_message.save()
+
+            # Incrementa o contador de respostas nas campanhas associadas
+            for campaign in campaign_message.campaigns.all():
+                if campaign.status != "cancelado":
+                    # Incrementa o contador de respostas
+                    SendMensagem.objects.create(
+                        campaign=campaign,
+                        numero=number,
+                        status='response',
+                        code=200,
+                        msg=message_content
+                    )
+                    campaign.response += 1
+                    campaign.save()
+
+                else:
+                    continue  # Ignora campanhas canceladas
+
+            # Opcional: Adiciona a resposta ao log (pode ser implementado conforme sua necessidade)
+
+        print('Resposta registrada para as campanhas ativas.', instance_name, number)
+        return JsonResponse({"success": "Resposta registrada com sucesso."}, status=201)
+
     except Instance.DoesNotExist:
         return JsonResponse({"error": "Instância não encontrada"}, status=400)
-    except Campaign.DoesNotExist:
-        return JsonResponse({"error": "Campanha não encontrada"}, status=400)
     except Exception as e:
         print(f"error {e}")
         return JsonResponse({"error": f"Erro ao registrar resposta: {str(e)}"}, status=500)

@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from app.modulos.contact.models import Contact, Tag
 from app.modulos.instance.models import Instance
-from .models import SendMensagem, Campaign
+from .models import SendMensagem, Campaign, CampaignMessage
 
 import random
 import time
@@ -118,6 +118,12 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
                     # Atualiza contadores da campanha
                     if status == 'sucesso':
                         campaign.send_success += 1
+                        CampaignMessage.objects.create(
+                            campaigns=[campaign],  # Associando a campanha
+                            instance=inst,
+                            numero=numero_celular,
+                            status='pendente'  # Iniciando como pendente
+                        )
                     else:
                         campaign.send_error += 1
 
