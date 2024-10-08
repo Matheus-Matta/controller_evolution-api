@@ -35,7 +35,7 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
         
         # Seleciona os contatos entre o número inicial e final
         contacts_list = contacts[start_number-1:end_number]
-        contacts_chunks = [contacts_list[i:i + CHUNK_SIZE] for i in range(0, len(contacts_list), CHUNK_SIZE)]
+        contacts_chunks = [list(contacts_list[i:i + CHUNK_SIZE].values_list('id', flat=True)) for i in range(0, len(contacts_list), CHUNK_SIZE)]
 
         # Cria uma lista de subtasks
         group_tasks = [enviar_mensagens_para_grupo.s(campaign_id, chunk) for chunk in contacts_chunks]
@@ -48,6 +48,7 @@ def process_campaign_contacts(self, campaign_id, tag_name=None, contact_name=Non
     except Exception as e:
         print(f"Erro exception {e}")
         raise ValueError("Erro ao iniciar campanha.")
+
 
 
 @shared_task(bind=True)
@@ -83,7 +84,10 @@ def enviar_mensagens_para_grupo(self, campaign_id, contacts_chunk):
         contacts_sent = []
         progress_recorder = ProgressRecorder(self)
 
-        for idx, contact in enumerate(contacts_chunk):
+        # Recupera os contatos a partir dos seus IDs
+        contacts = Contact.objects.filter(id__in=contacts_chunk)
+
+        for idx, contact in enumerate(contacts):
             numero_celular = contact.number
             nome = contact.name or "Colaborador"
             instance = instances[idx % len(instances)]  # Seleciona a instância de forma cíclica
@@ -111,7 +115,6 @@ def enviar_mensagens_para_grupo(self, campaign_id, contacts_chunk):
 
             # Atualiza o progresso da tarefa
             progress_recorder.set_progress(idx + 1, len(contacts_chunk))
-        
         
         # Atualiza o progresso da campanha
         campaign.send_success += sum(1 for msg in contacts_sent if msg.status == 'sucesso')
