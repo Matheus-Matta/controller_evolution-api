@@ -63,6 +63,7 @@ def campaign_details(request, campaign_id):
         logs = SendMensagem.objects.filter(campaign=campaign_id)
 
         # Serializar a campanha
+        response_count = CampaignMessage.objects.filter(campaigns=campaign, status='respondida').count()
         campaign_data = {
             'id': campaign.id,
             'name': campaign.name,
@@ -73,7 +74,7 @@ def campaign_details(request, campaign_id):
             'start_date': campaign.start_date,
             'end_date': campaign.end_date,
             'id_progress': campaign.id_progress,
-            'response_count': campaign.response_count
+            'response_count': response_count
         }
 
         # Serializar os logs
@@ -132,7 +133,7 @@ def campaign_add_response(request, instance_name):
         pending_messages = CampaignMessage.objects.filter(
             numero=number,
             instance=instance,
-            status='pendente'
+            status='pendente',
         )
 
         if not pending_messages.exists():
